@@ -8,90 +8,99 @@ import {
   Switch,
   Route,
   Link,
-  Redirect
+  Redirect,
+  withRouter
 } from "react-router-dom";
 
-function App() {
-  return (
-    <Router>
-      <div className="App">
-        <Switch>
-          <Route exact path="/">
-            <Home />
-          </Route>
-          <PrivateRoute path="/todo">
-            <Todo />
-          </PrivateRoute>
-        </Switch>
-      </div>
-    </Router>
-  );
-}
+class App extends Component {
 
-const userAuth = {
-  waitingForResponse: false,
-  isAuthenticated: false,
-  authenticate(username,password){
-    userAuth.waitingForResponse = true;
-    var formData = new FormData();
-    formData.append("username",username);
-    formData.append("password",password);   
-    console.dir(username)
-    console.dir(password)
-    console.dir(formData)
-    fetch("http://localhost:8000/todoapi/login/",{
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      mode: 'cors', // no-cors, *cors, same-origin
-      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      // credentials: 'same-origin', // include, *same-origin, omit
-      // headers: {
-      //   'Content-Type': 'application/json'
-      'Content-Type': 'application/x-www-form-urlencoded',
-      // },
-      // redirect: 'follow', // manual, *follow, error
-      // referrerPolicy: 'no-referrer', // no-referrer, *client
-      // body:JSON.stringify({"username":username,"password":password})
-      body:formData
-    }).then((response) => {
-      let databody = response.json()
-      console.dir(databody)
-      if(response.ok){
-        var userId = -1;
-        databody.then((body)=>{
-          console.log("UserID is "+ body.userId)
-          userId = body.userId;
-        });
-        userAuth.isAuthenticated = true;
-      }else{
-        userAuth.isAuthenticated = false;
+  state = {
+    userAuth: {
+      waitingForResponse: false,
+      isAuthenticated: false,
+      userId: -1,
+      authenticate(username,password){
+        this.waitingForResponse = true;
+        var formData = new FormData();
+        formData.append("username",username);
+        formData.append("password",password);   
+        console.dir(username)
+        console.dir(password)
+        console.dir(formData)
+        fetch("http://localhost:8000/todoapi/login/",{
+          method: 'POST', // *GET, POST, PUT, DELETE, etc.
+          mode: 'cors', // no-cors, *cors, same-origin
+          // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+          // credentials: 'same-origin', // include, *same-origin, omit
+          // headers: {
+          //   'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          // },
+          // redirect: 'follow', // manual, *follow, error
+          // referrerPolicy: 'no-referrer', // no-referrer, *client
+          // body:JSON.stringify({"username":username,"password":password})
+          body:formData
+        }).then((response) => {
+          let databody = response.json()
+          console.dir(databody)
+          if(response.ok){
+            databody.then((body)=>{
+              console.log("UserID is "+ body.userId)
+              this.userId = body.userId;
+            });
+            this.isAuthenticated = true;
+          }else{
+            this.isAuthenticated = false;
+          }
+          console.log("User Authenticated?: "+this.isAuthenticated)
+          this.waitingForResponse = false;
+          // window.location.href = process.env.PUBLIC_URL + "/todo"
+        })  
+      },
+      logout(){
+        this.isAuthenticated = false;
       }
-      console.log("User Authenticated?: "+userAuth.isAuthenticated)
-      userAuth.waitingForResponse = false;
-      window.location.href = process.env.PUBLIC_URL + "/todo"
-    })  
-},
-  logout(){
-    userAuth.isAuthenticated = false;
-  },
-  setState(authBool){
-    this.isAuthenticated = authBool;
+    }
+  }
+
+  
+  render (){
+    return (
+      <Router>
+        <div className="App">
+          <Switch>
+            <Route exact path="/">
+              <Home userAuth={this.state.userAuth} />
+            </Route>
+            <PrivateRoute userAuthed={this.state.userAuth.isAuthenticated} path="/todo">
+              <Todo userAuth={this.state.userAuth}/>
+            </PrivateRoute>
+          </Switch>
+        </div>
+      </Router>
+    );
   }
 }
 
-function PrivateRoute({children,...rest}){
-  while(userAuth.waitingForResponse){
-    alert("waiting");
-    setTimeout(500);
-  }
-  alert("PrivateRoute User Authenticated?: "+userAuth.isAuthenticated);
+
+
+function PrivateRoute({children,userAuthed,...rest}){
+  console.dir(userAuthed)
+  // while(userAuth.waitingForResponse){
+  //   alert("waiting");
+  //   setTimeout(500);
+  // }
+  setTimeout(100000)
+  alert("PrivateRoute User Authenticated?: "+userAuthed);
   return(<Route
     {...rest}
-    render={({location})=> userAuth.isAuthenticated ?
+    render={({location})=> userAuthed ?
     (
       children
     ) : (
-      // <Redirect to={{pathname:"/",state:{from:location}}}/>
-      <Redirect to="/"/>
+      // children
+      <Redirect to={{pathname:"/",state:{from:location}}}/>
+      // <Redirect to="/"/>
     )
     }
   />)
@@ -113,9 +122,10 @@ class Home extends Component{
   }
 
   handleSubmit = event => {
-    event.preventDefault();
-    userAuth.authenticate(this.state.username,this.state.password)
-    // alert("Submitted");
+      event.preventDefault();
+      this.props.userAuth.authenticate(this.state.username,this.state.password)
+      // alert("Submitted");
+      // window.location.href = process.env.PUBLIC_URL + "/todo"
   }
 
 
