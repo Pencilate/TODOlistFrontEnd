@@ -1,8 +1,10 @@
+@import url('https://fonts.googleapis.com/css?family=Quicksand&display=swap');
+
 .App {
   text-align: center;
 }
 
-.App-logo {
+/* .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
@@ -35,4 +37,53 @@
   to {
     transform: rotate(360deg);
   }
+} */
+
+#LandingPage {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+}
+
+#LandingImage{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: inherit;
+  width: 60%;
+  background-image: url("/img/landingImg.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+#LandingImage h1{
+  font: 3.5em 'QuickSand';
+}
+
+#LandingLogin {
+  height: inherit;
+  width: 40%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#LoginForm{
+  position: relative;
+  top: 6em;
+}
+#LoginForm form{
+  display: grid;
+}
+
+#LoginForm form TextField{
+  padding: 0.5em;
+}
+
+#LoginForm h1{
+  font: 3.5em 'QuickSand';
+}
+
+#LoginForm div.MuiTextField-root, #LoginForm button.MuiButton-root{
+  margin: 0.5em;
 }
