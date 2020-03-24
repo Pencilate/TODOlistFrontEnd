@@ -28,28 +28,11 @@ function App() {
   );
 }
 
-// async function postData(url = '', data = {}) {
-//   // Default options are marked with *
-//   const response = await fetch(url, {
-//     method: 'POST', // *GET, POST, PUT, DELETE, etc.
-//     mode: 'no-cors', // no-cors, *cors, same-origin
-//     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-//     credentials: 'same-origin', // include, *same-origin, omit
-//     headers: {
-//       // 'Content-Type': 'application/json'
-//       'Content-Type': 'application/x-www-form-urlencoded',
-//     },
-//     redirect: 'follow', // manual, *follow, error
-//     referrerPolicy: 'no-referrer', // no-referrer, *client
-//     // body: JSON.stringify(data) // body data type must match "Content-Type" header
-//     body: data // body data type must match "Content-Type" header
-//   }).then()
-//   return await response.json(); // parses JSON response into native JavaScript objects
-// }
-
 const userAuth = {
+  waitingForResponse: false,
   isAuthenticated: false,
-  async authenticate(username,password){
+  authenticate(username,password){
+    userAuth.waitingForResponse = true;
     var formData = new FormData();
     formData.append("username",username);
     formData.append("password",password);   
@@ -63,40 +46,43 @@ const userAuth = {
       // credentials: 'same-origin', // include, *same-origin, omit
       // headers: {
       //   'Content-Type': 'application/json'
-      //   // 'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/x-www-form-urlencoded',
       // },
       // redirect: 'follow', // manual, *follow, error
       // referrerPolicy: 'no-referrer', // no-referrer, *client
       // body:JSON.stringify({"username":username,"password":password})
       body:formData
     }).then((response) => {
-      console.log(response.status)
-      console.dir(response)
-      return response.json()
-    })  
-    .then((data) => {
-      console.dir(data)
-      console.log('Success:', data);
-      console.log("UserID is "+data.userId)
-      userAuth.isAuthenticated = true;
+      let databody = response.json()
+      console.dir(databody)
+      if(response.ok){
+        var userId = -1;
+        databody.then((body)=>{
+          console.log("UserID is "+ body.userId)
+          userId = body.userId;
+        });
+        userAuth.isAuthenticated = true;
+      }else{
+        userAuth.isAuthenticated = false;
+      }
       console.log("User Authenticated?: "+userAuth.isAuthenticated)
+      userAuth.waitingForResponse = false;
       window.location.href = process.env.PUBLIC_URL + "/todo"
-    })
-    .catch((error) => {
-      console.dir(error)
-      console.error('Error:', error);
-      userAuth.isAuthenticated = false;
-      console.log("User Authenticated?: "+userAuth.isAuthenticated)
-
-    });
-    // console.log("User Authenticated?: "+userAuth.isAuthenticated)
-  },
+    })  
+},
   logout(){
     userAuth.isAuthenticated = false;
+  },
+  setState(authBool){
+    this.isAuthenticated = authBool;
   }
 }
 
 function PrivateRoute({children,...rest}){
+  while(userAuth.waitingForResponse){
+    alert("waiting");
+    setTimeout(500);
+  }
   alert("PrivateRoute User Authenticated?: "+userAuth.isAuthenticated);
   return(<Route
     {...rest}
@@ -104,7 +90,8 @@ function PrivateRoute({children,...rest}){
     (
       children
     ) : (
-      <Redirect to={{pathname:"/",state:{from:location}}}/>
+      // <Redirect to={{pathname:"/",state:{from:location}}}/>
+      <Redirect to="/"/>
     )
     }
   />)
