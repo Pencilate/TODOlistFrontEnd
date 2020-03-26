@@ -25,7 +25,8 @@ class Home extends Component{
     handleSubmit = event => {
         event.preventDefault();
         this.props.userAuth.authenticate(this.state.username,this.state.password)
-        this.props.history.push('/todo');
+        // this.props.userAuth.checkAuth();
+        this.props.history.replace('/todo');
     }
   
   

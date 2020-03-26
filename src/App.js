@@ -15,7 +15,6 @@ class App extends Component {
     userAuth: {
       waitingForResponse: false,
       isAuthenticated: false,
-      userId: -1,
       authenticate(username,password){
         this.waitingForResponse = true;
         var formData = new FormData();
@@ -26,7 +25,7 @@ class App extends Component {
           method: 'POST', // *GET, POST, PUT, DELETE, etc.
           mode: 'cors', // no-cors, *cors, same-origin
           // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-          // credentials: 'same-origin', // include, *same-origin, omit
+          credentials: 'include', // include, *same-origin, omit
           // headers: {
           //   'Content-Type': 'application/json'
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -39,24 +38,58 @@ class App extends Component {
           let datapromise = response.json()
           console.dir(datapromise)
           if(response.ok){
-            datapromise.then((body)=>{
-              console.log("UserID is "+ body.userId)
-              this.userId = body.userId;
-            });
-            this.isAuthenticated = true;
-          }else{
-            this.isAuthenticated = false;
+            console.log("User Authenticated")
           }
-          console.log("User Authenticated?: "+this.isAuthenticated)
           this.waitingForResponse = false;
         })  
       },
       logout(){
-        this.isAuthenticated = false;
+        fetch("http://localhost:8000/todoapi/logout/",{
+          method: 'POST', // *GET, POST, PUT, DELETE, etc.
+          mode: 'cors', // no-cors, *cors, same-origin
+          // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+          credentials: 'include', // include, *same-origin, omit
+          // headers: {
+          //   'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          // },
+          // redirect: 'follow', // manual, *follow, error
+          // referrerPolicy: 'no-referrer', // no-referrer, *client
+          // body:JSON.stringify({"username":username,"password":password})
+          // body:""
+        }).then((response) => {
+          let datapromise = response.json()
+          console.dir(datapromise)
+          if(response.ok){
+            console.log("User Logged Out")
+          }
+          this.waitingForResponse = false;
+        })  
+      },
+      checkAuth(){
+        fetch("http://localhost:8000/todoapi/todos/",{
+          method: 'GET', // *GET, POST, PUT, DELETE, etc.
+          mode: 'cors', // no-cors, *cors, same-origin
+          // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+          credentials: 'include', // include, *same-origin, omit
+          // headers: {
+          //   'Content-Type': 'application/json'
+          //   'Content-Type': 'application/x-www-form-urlencoded',
+          // },
+          // redirect: 'follow', // manual, *follow, error
+          // referrerPolicy: 'no-referrer', // no-referrer, *client
+          // body:JSON.stringify({"username":username,"password":password})
+        //   body:formData
+        }).then((response) => {
+          console.log("CheckAuth: "+response.ok)
+          // this.setState({
+          //     isAuthenticated: response.ok,
+          // })
+          this.isAuthenticated = response.ok
+        });    
       }
     }
   }
-
   
   render (){
     return (
@@ -64,9 +97,9 @@ class App extends Component {
         <div className="App">
           <Switch>
             <Route exact path="/">
-              <Home userAuth={this.state.userAuth} />
+              <Home userAuth={this.state.userAuth}/>
             </Route>
-            <PrivateRoute userAuthed={this.state.userAuth.isAuthenticated} path="/todo">
+            <PrivateRoute exact userAuth={this.state.userAuth} path="/todo">
               <Todo userAuth={this.state.userAuth}/>
             </PrivateRoute>
           </Switch>
@@ -77,28 +110,50 @@ class App extends Component {
 }
 
 
-
-function PrivateRoute({children,userAuthed,...rest}){
-  console.dir(userAuthed)
-  alert("PrivateRoute User Authenticated?: "+userAuthed);
+function PrivateRoute({children, userAuth,...rest}){
+  userAuth.checkAuth()
   return(<Route
     {...rest}
-    render={({location})=> userAuthed ?
+    render={({location})=> userAuth.isAuthenticated ?
     (
       children
     ) : (
-      // children
-      <Redirect to={{pathname:"/",state:{from:location}}}/>
-      // <Redirect to="/"/>
+      //children
+      <Redirect to="/"/>
     )
     }
   />)
+
 }
 
 function Todo(){
   return (
     <div>
       <h1>Work in Progress</h1>
+      <button onClick={(event)=>{
+        event.preventDefault();
+        fetch("http://localhost:8000/todoapi/logout/",{
+          method: 'POST', // *GET, POST, PUT, DELETE, etc.
+          mode: 'cors', // no-cors, *cors, same-origin
+          // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+          credentials: 'include', // include, *same-origin, omit
+          // headers: {
+          //   'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          // },
+          // redirect: 'follow', // manual, *follow, error
+          // referrerPolicy: 'no-referrer', // no-referrer, *client
+          // body:JSON.stringify({"username":username,"password":password})
+          // body:""
+        }).then((response) => {
+          let datapromise = response.json()
+          console.dir(datapromise)
+          if(response.ok){
+            console.log("User Logged Out")
+          }
+        })  
+        window.location.replace(process.env.PUBLIC_URL);
+      }}>Logout</button>
     </div>
   );
 }
