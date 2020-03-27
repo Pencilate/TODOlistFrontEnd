@@ -84,3 +84,7 @@
   flex-wrap: wrap;
   justify-content: center;
 }
+
+.error {
+  color:#DB4F39;
+}
