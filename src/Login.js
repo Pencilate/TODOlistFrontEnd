@@ -7,7 +7,7 @@ import {
   withRouter
 } from "react-router-dom";
 
-class Home extends Component{
+class LoginPage extends Component{
     initialState = {
         username: '',
         password: '',
@@ -15,6 +15,41 @@ class Home extends Component{
   
     state = this.initialState
   
+    authenticate(username,password){
+      var formData = new FormData();
+      formData.append("username",username);
+      formData.append("password",password);   
+      console.dir(formData)
+      fetch("http://localhost:8000/todoapi/login/",{
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        mode: 'cors', // no-cors, *cors, same-origin
+        // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'include', // include, *same-origin, omit
+        // headers: {
+        //   'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        // },
+        // redirect: 'follow', // manual, *follow, error
+        // referrerPolicy: 'no-referrer', // no-referrer, *client
+        // body:JSON.stringify({"username":username,"password":password})
+        body:formData
+      }).then((response) => {
+        let datapromise = response.json()
+        console.dir(datapromise)
+        if(response.ok){
+          console.log("User Authenticated")
+          this.props.userAuthHandler(true);
+        }
+      })  
+    }
+
+    handleSubmit = event => {
+      event.preventDefault();
+      this.authenticate(this.state.username,this.state.password)
+      this.props.history.replace('/todo');
+  }
+
+
     handleChange = event => {
         const {name,value} = event.target
         this.setState({
@@ -22,13 +57,7 @@ class Home extends Component{
         })
     }
   
-    handleSubmit = event => {
-        event.preventDefault();
-        this.props.userAuth.authenticate(this.state.username,this.state.password)
-        // this.props.userAuth.checkAuth();
-        this.props.history.replace('/todo');
-    }
-  
+
   
     render(){
         const {username,password} = this.state;
@@ -53,4 +82,4 @@ class Home extends Component{
     }
   }
 
-  export default withRouter(Home)
+  export default withRouter(LoginPage)
