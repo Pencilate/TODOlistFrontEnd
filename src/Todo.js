@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import Button from "@material-ui/core/Button";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import AddTwoToneIcon from "@material-ui/icons/AddTwoTone";
+import CloseIcon from '@material-ui/icons/Close';
+import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 import { withStyles } from "@material-ui/core/styles";
 
 import Paper from "@material-ui/core/Paper";
@@ -61,98 +63,46 @@ const useTodoCardStyles = theme => ({
   paper: {
     position: "absolute",
     width: "60%",
-    height: "50%",
+    height: "60%",
     backgroundColor: theme.palette.background.paper,
     boxShadow: theme.shadows[5],
     padding: theme.spacing(2, 4, 3),
-    top: "25%",
+    top: "20%",
     left: "20%",
-    display: "block"
+    display: "block",
+    overflow: "auto",
   },
   modalContent: {
     height: "90%"
   },
   modalButton: {
     height: "10%"
+  },
+  modalTextFields:{
+      margin: '0.5em'
   }
+
 });
-
-//  GetTodo = () =>{
-async function GetTodo() {
-  fetch("http://localhost:8000/todoapi/todos/", {
-    method: "GET", // *GET, POST, PUT, DELETE, etc.
-    mode: "cors", // no-cors, *cors, same-origin
-    // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-    credentials: "include" // include, *same-origin, omit
-    // headers: {
-    //   'Content-Type': 'application/json'
-    //   'Content-Type': 'application/x-www-form-urlencoded',
-    // },
-    // redirect: 'follow', // manual, *follow, error
-    // referrerPolicy: 'no-referrer', // no-referrer, *client
-    // body:JSON.stringify({"username":username,"password":password})
-    //   body:formData
-  }).then(response => {
-    let datapromise = response.json();
-    console.dir(datapromise);
-    if (response.ok) {
-      console.log("Data response OK");
-      datapromise.then(body => {
-        console.dir(body.records);
-        return [true, body.records];
-      });
-    } else {
-      console.log("response not ok");
-      return [false];
-    }
-  });
-}
-
-async function GetTodoSpecific(todoID) {
-  fetch("http://localhost:8000/todoapi/todos/" + todoID, {
-    method: "GET", // *GET, POST, PUT, DELETE, etc.
-    mode: "cors", // no-cors, *cors, same-origin
-    // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-    credentials: "include" // include, *same-origin, omit
-    // headers: {
-    //   'Content-Type': 'application/json'
-    //   'Content-Type': 'application/x-www-form-urlencoded',
-    // },
-    // redirect: 'follow', // manual, *follow, error
-    // referrerPolicy: 'no-referrer', // no-referrer, *client
-    // body:JSON.stringify({"username":username,"password":password})
-    //   body:formData
-  }).then(response => response);
-}
 
 class TodoPage extends Component {
   initialState = {
     currentTodo: {
-      id: "",
-      title: "",
-      description: "",
+      id: undefined,
+      title: undefined,
+      description: undefined,
       status: false
     },
+    tempId: undefined,
+    tempTitle: undefined,
+    tempDescription: undefined,
+    tempStatus: false,
     todorecords: [
       {
         id: 1,
-        title: "TestFromPM7",
-        description: "Sent from postman",
+        title: "TestInitialTodo",
+        description: "InitialTODO",
         status: true
       },
-      {
-        id: 2,
-        title: "Second",
-        description: "Second note",
-        status: false
-      },
-      {
-        id: 3,
-        title: "TestFromPM3",
-        description:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In lorem purus, pretium nec scelerisque et, commodo vitae diam. Cras interdum quam id metus molestie, vitae dignissim tellus vehicula. Donec fringilla enim ac maximus vulputate. Donec ac diam sagittis, malesuada velit eget, tincidunt lectus. Duis at mauris leo. Curabitur ut ligula at felis sollicitudin lobortis sit amet at erat. Curabitur cursus pharetra eros. Morbi malesuada cursus dolor, a malesuada urna. Pellentesque nec erat ut augue vehicula laoreet id at ante. Curabitur pharetra commodo nulla eget consectetur. Aliquam erat volutpat. Integer in eleifend velit. Nunc vulputate feugiat massa consequat scelerisque.",
-        status: false
-      }
     ],
     openModal: false
   };
@@ -160,7 +110,6 @@ class TodoPage extends Component {
   state = this.initialState;
 
   handleLogout = () => {
-    alert("Logout called");
     this.logout();
     window.location.replace(process.env.PUBLIC_URL);
   };
@@ -189,12 +138,104 @@ class TodoPage extends Component {
     });
   };
 
+  getTodo = () => {
+    fetch("http://localhost:8000/todoapi/todos/", {
+      method: "GET", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "include" // include, *same-origin, omit
+      // headers: {
+      //   'Content-Type': 'application/json'
+      //   'Content-Type': 'application/x-www-form-urlencoded',
+      // },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *client
+      // body:JSON.stringify({"username":username,"password":password})
+      //   body:formData
+    }).then(response => {
+      let datapromise = response.json();
+      console.dir(datapromise);
+      if (response.ok) {
+        console.log("Retrieved All TODOs");
+        datapromise.then(body => {
+          console.dir(body.records);
+          this.setState({
+              todorecords: body.records
+          })
+        });
+      } else {
+        console.log("Unable to retrieve all TODOs");
+      }
+    });
+  };
+
+  getTodoSpecific = (todoId) => {
+    fetch("http://localhost:8000/todoapi/todos/"+todoId, {
+      method: "GET", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "include" // include, *same-origin, omit
+      // headers: {
+      //   'Content-Type': 'application/json'
+      //   'Content-Type': 'application/x-www-form-urlencoded',
+      // },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *client
+      // body:JSON.stringify({"username":username,"password":password})
+      //   body:formData
+    }).then(response => {
+      let datapromise = response.json();
+      console.dir(datapromise);
+      if (response.ok) {
+        console.log("Retrieved Specifc TODOs");
+        datapromise.then(body => {
+            console.dir(body)
+            this.setState({
+              currentTodo: body,
+              tempId: body.id,
+              tempTitle: body.title,
+              tempDescription: body.description,
+              tempStatus: body.status,
+            });
+        });
+      } else {
+        console.log("Unable to retrieve specific TODOs");
+      }
+    });
+  };
+
+  deleteTodoSpecific = (todoId) => {
+    fetch("http://localhost:8000/todoapi/todos/"+todoId, {
+      method: "DELETE", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "include" // include, *same-origin, omit
+      // headers: {
+      //   'Content-Type': 'application/json'
+      //   'Content-Type': 'application/x-www-form-urlencoded',
+      // },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *client
+      // body:JSON.stringify({"username":username,"password":password})
+      //   body:formData
+    }).then(response => {
+      let datapromise = response.json();
+      console.dir(datapromise);
+      if (response.ok) {
+        console.log("Deleted Specifc TODOs");
+        this.getTodo();
+      } else {
+        console.log("Unable to delete specific TODOs");
+      }
+    });
+  };
+
   handleTodoContentChange = event => {
     const { name, value } = event.target;
     this.setState({
-      currentTodo: {
+    //   currentTodo: {
         [name]: value
-      }
+    //   }
     });
   };
 
@@ -202,64 +243,42 @@ class TodoPage extends Component {
     event.preventDefault();
     const { name, value } = event.target;
     console.dir(event.target);
-    // this.setState({
-    //     currentTodo:{
-    //         id:event.target.parentElement.value,
-    //         title: this.state.currentTodo.title,
-    //         description: this.state.currentTodo.description,
-    //         status: this.state.currentTodo.status,
-    //     },
-    //     openModal:true,
-    // })
+    this.getTodoSpecific(event.target.parentElement.value);
+    this.handleOpenModal();
 
-    console.log("Retrieveing Specific TODO");
-    let response = GetTodoSpecific(event.target.parentElement.value);
-    // let datapromise = response.json();
-    // console.dir(datapromise);
-    console.log("Response Object:");
-    console.dir(response);
-    if (response.ok) {
-      console.log("Data response OK");
-      response.json().then(body => {
-        console.dir(body.records);
-        this.setState({
-          currentTodo: {
-            id: event.target.parentElement.value,
-            title: body.title,
-            description: body.description,
-            status: body.status
-          },
-          openModal: true
-        });
-      });
-    } else {
-      console.log("Data response NOT OK");
-    }
   };
+
+  handleOpenModal = () =>{
+    this.setState({
+        openModal:true,
+    })
+  }
 
   handleModalClose = () => {
     this.setState({
-      openModal: false
+        currentTodo: {
+            id: undefined,
+            title: undefined,
+            description: undefined,
+            status: false
+          },
+        tempId: undefined,
+        tempTitle: undefined,
+        tempDescription: undefined,
+        tempStatus: false,
+        openModal: false
     });
   };
 
-  componentDidMount() {
-    let retrieveAndSetState = async () => {
-      let todoData = GetTodo();
-      console.log("TodoData");
-      console.dir(todoData);
-      if (todoData[0] == true) {
-        console.log("Retrieved Data from API success");
-        this.setState({
-          todorecords: todoData[1]
-        });
-      } else {
-        console.log("Retrieved Data from API failed");
-      }
-    };
-
-    retrieveAndSetState();
+  handleTodoDelete = () => {
+      this.deleteTodoSpecific(this.state.currentTodo.id);
+      this.handleModalClose();
   }
+
+  componentDidMount(){
+    this.getTodo()
+  }
+
   render() {
     const { classes } = this.props;
 
@@ -302,7 +321,58 @@ class TodoPage extends Component {
 
     const TodoModalContent = props => {
       const currTodo = props.currentTodo;
-      if (currTodo.id != "") {
+      if (currTodo.id == undefined) {
+        return (
+            <div className={classes.paper}>
+              <div className={classes.modalContent}>
+              <p>Create Mode</p>
+                <TextField
+                  className={classes.modalTextFields}
+                  type="text"
+                  id="modaltitle"
+                  name="tempTitle"
+                  label="Title"
+                  variant="outlined"
+                  value={currTodo.title}
+                  onChange={this.handleTodoContentChange}
+                  fullWidth
+                />
+                <TextField
+                  className={classes.modalTextFields}
+                  type="text"
+                  id="modaldescription"
+                  name="tempDescription"
+                  label="Description"
+                  variant="outlined"
+                  value={currTodo.description}
+                  onChange={this.handleTodoContentChange}
+                  fullWidth
+                  rowsMax="10"
+                  multiline
+                />
+              </div>
+              <div className={classes.modalButton}>
+                <Button
+                  variant="contained"
+                  id="btnModalEdit"
+                  startIcon={<AddTwoToneIcon />}
+                >
+                  Create
+                </Button>
+                <Button
+                  color="#DB4F39"
+                  variant="contained"
+                  id="btnModalClose"
+                  onClick={this.handleModalClose}
+                  startIcon={<CloseIcon />}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          );
+      }
+      else{
         let chip = undefined;
         if (currTodo.status === true) {
           chip = <Chip label="DONE" className={classes.todoChipDone} />;
@@ -312,27 +382,28 @@ class TodoPage extends Component {
         return (
           <div className={classes.paper}>
             <div className={classes.modalContent}>
+            <p>Edit/View Mode</p>
               <TextField
                 type="text"
                 id="modaltitle"
-                name="title"
+                name="tempTitle"
                 label="Title"
                 variant="outlined"
-                value={this.state.currentTodo.title}
+                value={currTodo.title}
                 InputProps={{ readOnly: true }}
-                onChange={this.handleChange}
+                onChange={this.handleTodoContentChange}
                 fullWidth
               />
               {chip}
               <TextField
                 type="text"
                 id="modaldescription"
-                name="description"
+                name="tempDescription"
                 label="Description"
                 variant="outlined"
-                value={this.state.currentTodo.title}
+                value={currTodo.description}
                 InputProps={{ readOnly: true }}
-                onChange={this.handleChange}
+                onChange={this.handleTodoContentChange}
                 fullWidth
                 rowsMax="10"
                 multiline
@@ -341,11 +412,28 @@ class TodoPage extends Component {
             <div className={classes.modalButton}>
               <Button
                 variant="contained"
+                id="btnModalDelete"
+                startIcon={<DeleteForeverIcon />}
+                onClick={this.handleTodoDelete}
+              >
+              Delete
+              </Button>
+              <Button
+                variant="contained"
                 id="btnModalEdit"
                 startIcon={<AddTwoToneIcon />}
               >
                 Edit
               </Button>
+              <Button
+                  color="#DB4F39"
+                  variant="contained"
+                  id="btnModalClose"
+                  onClick={this.handleModalClose}
+                  startIcon={<CloseIcon />}
+                >
+                  Close
+                </Button>
             </div>
           </div>
         );
@@ -361,6 +449,7 @@ class TodoPage extends Component {
               variant="contained"
               id="btnCreateTodo"
               startIcon={<AddTwoToneIcon />}
+              onClick={this.handleOpenModal}
             >
               Create
             </Button>
