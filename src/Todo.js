@@ -225,8 +225,8 @@ class TodoPage extends Component{
 
     handleLogout = () => {
         alert("logout called");
-        // this.props.userAuth.logout()
-        // window.location.replace(process.env.PUBLIC_URL);
+        this.props.userAuth.logout()
+        window.location.replace(process.env.PUBLIC_URL);
     }
 
     componentDidMount(){
