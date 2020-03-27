@@ -30,13 +30,8 @@ class App extends Component {
             <Route exact path="/">
               <LoginPage userAuthHandler={this.handleAuthenticationUpdate.bind(this)}/>
             </Route>
-<<<<<<< HEAD
             <PrivateRoute exact userAuth={this.state.isAuthenticated} path="/todo">
               <TodoPage userAuthHandler={this.handleAuthenticationUpdate.bind(this)}/>
-=======
-            <PrivateRoute exact userAuth={this.state.userAuth} path="/todo">
-              <TodoPage userAuth={this.state.userAuth}/>
->>>>>>> Renamed Todo to TodoPage
             </PrivateRoute>
           </Switch>
         </div>
