@@ -1,37 +1,43 @@
-import React, {Component} from 'react';
-import './App.css';
+import React, { Component } from "react";
+import "./App.css";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Redirect
 } from "react-router-dom";
-import LoginPage from "./Login.js"
-import TodoPage from "./Todo.js"
-
+import LoginPage from "./Login.js";
+import TodoPage from "./Todo.js";
 
 class App extends Component {
-
   state = {
-    isAuthenticated: false,
-  }
-  
-  handleAuthenticationUpdate(value){
+    isAuthenticated: false
+  };
+
+  handleAuthenticationUpdate(value) {
     this.setState({
-      isAuthenticated:value,
-    })
+      isAuthenticated: value
+    });
   }
 
-  render (){
+  render() {
     return (
       <Router>
         <div className="App">
           <Switch>
             <Route exact path="/">
-              <LoginPage userAuthHandler={this.handleAuthenticationUpdate.bind(this)}/>
+              <LoginPage
+                userAuthHandler={this.handleAuthenticationUpdate.bind(this)}
+              />
             </Route>
-            <PrivateRoute exact userAuth={this.state.isAuthenticated} path="/todo">
-              <TodoPage userAuthHandler={this.handleAuthenticationUpdate.bind(this)}/>
+            <PrivateRoute
+              exact
+              userAuth={this.state.isAuthenticated}
+              path="/todo"
+            >
+              <TodoPage
+                userAuthHandler={this.handleAuthenticationUpdate.bind(this)}
+              />
             </PrivateRoute>
           </Switch>
         </div>
@@ -40,20 +46,20 @@ class App extends Component {
   }
 }
 
-
-function PrivateRoute({children, userAuth,...rest}){
-  return(<Route
-    {...rest}
-    render={({location})=> userAuth ?
-    (
-      children
-    ) : (
-      //children
-      <Redirect to="/"/>
-    )
-    }
-  />)
-
+function PrivateRoute({ children, userAuth, ...rest }) {
+  return (
+    <Route
+      {...rest}
+      render={({ location }) =>
+        userAuth ? (
+          children
+        ) : (
+          //children
+          <Redirect to="/" />
+        )
+      }
+    />
+  );
 }
 
 export default App;
