@@ -15,7 +15,7 @@ class App extends Component {
     isAuthenticated: false,
   }
   
-  handleAuthenticationUpdate(value){
+  handleAuthenticationUpdate = (value) =>{
     this.setState({
       isAuthenticated:value,
     })
@@ -27,10 +27,10 @@ class App extends Component {
         <div className="App">
           <Switch>
             <Route exact path="/">
-              <LoginPage userAuthHandler={this.handleAuthenticationUpdate.bind(this)}/>
+              <LoginPage userAuthHandler={this.handleAuthenticationUpdate}/>
             </Route>
             <PrivateRoute exact userAuth={this.state.isAuthenticated} path="/todo">
-              <TodoPage userAuthHandler={this.handleAuthenticationUpdate.bind(this)}/>
+              <TodoPage userAuthHandler={this.handleAuthenticationUpdate}/>
             </PrivateRoute>
           </Switch>
         </div>
