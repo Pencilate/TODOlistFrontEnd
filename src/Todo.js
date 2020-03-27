@@ -223,6 +223,12 @@ class TodoPage extends Component{
         })
     }
 
+    handleLogout = () => {
+        alert("logout called");
+        // this.props.userAuth.logout()
+        // window.location.replace(process.env.PUBLIC_URL);
+    }
+
     componentDidMount(){
         let retrieveAndSetState = async () =>{
             let todoData = GetTodo();
@@ -304,7 +310,7 @@ class TodoPage extends Component{
                     <h1>TODOs. Noted.</h1>
                     <div>
                         <Button variant="contained" id="btnCreateTodo" startIcon={<AddTwoToneIcon/>}>Create</Button>
-                        <Button variant="contained" id="btnLogout" startIcon={<ExitToAppIcon/>}>Logout</Button>
+                        <Button variant="contained" id="btnLogout" startIcon={<ExitToAppIcon/>} onClick={this.handleLogout}>Logout</Button>
                     </div>
                 </header>
                 <TodoContent todolist={this.state.todorecords}/>
