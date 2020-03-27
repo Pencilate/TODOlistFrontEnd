@@ -87,3 +87,7 @@
 #LoginForm div.MuiTextField-root, #LoginForm button.MuiButton-root{
   margin: 0.5em;
 }
+
+.error {
+  color:#DB4F39;
+}

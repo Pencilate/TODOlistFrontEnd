@@ -8,9 +8,11 @@ import {
 } from "react-router-dom";
 
 class LoginPage extends Component{
+
     initialState = {
         username: '',
         password: '',
+        authStatus: '',
     }
   
     state = this.initialState
@@ -39,6 +41,10 @@ class LoginPage extends Component{
         if(response.ok){
           console.log("User Authenticated")
           this.props.userAuthHandler(true);
+        }else{
+          this.setState({
+            authStatus:'You have entered Invalid Credentials',
+          })
         }
       })  
     }
@@ -47,17 +53,21 @@ class LoginPage extends Component{
       event.preventDefault();
       this.authenticate(this.state.username,this.state.password)
       setTimeout(this.handleRedirect, 2000);
-      // this.props.history.replace('/todo');
   }
 
     handleRedirect = () =>{
-      this.props.history.replace('/todo');
+      if(this.props.userAuth){
+        this.props.history.replace('/todo');
+      }
     }
 
     handleChange = event => {
         const {name,value} = event.target
         this.setState({
             [name]:value,
+        })
+        this.setState({
+          authStatus:'',
         })
     }
   
@@ -76,6 +86,7 @@ class LoginPage extends Component{
                   <form onSubmit={this.handleSubmit}>
                     <TextField type="text" id="fieldUsername" name="username" label="Username" variant="outlined" value={username} onChange={this.handleChange}/>
                     <TextField type="password" id="fieldPassword" name="password" label="Password" variant="outlined" value={password} onChange={this.handleChange}/>
+                    <p className="error" id="authenticationStatus">{this.state.authStatus}</p>
                     <Button variant="outlined" type="submit" id="btnLogin" >Login</Button>
                   </form>
                 </div>
