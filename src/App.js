@@ -23,7 +23,7 @@ class App extends Component {
 
   render() {
     return (
-      <SnackbarProvider 
+      <SnackbarProvider
       maxSnack={1}
       anchorOrigin={{
         vertical: 'top',
@@ -42,6 +42,7 @@ class App extends Component {
           </Switch>
         </div>
       </Router>
+    </SnackbarProvider>
     );
   }
 }

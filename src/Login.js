@@ -41,6 +41,7 @@ class LoginPage extends Component {
           this.setState({
             authStatus:'You have entered Invalid Credentials',
           })
+          this.props.enqueueSnackbar('You have entered Invalid Credentials',{ variant: 'error', })
         }
       })  
     }
