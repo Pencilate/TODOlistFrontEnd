@@ -1,13 +1,16 @@
 import React, { Component } from "react";
-import Button from "@material-ui/core/Button";
+import { withSnackbar } from 'notistack';
+import { withStyles } from "@material-ui/core/styles";
+
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import AddTwoToneIcon from "@material-ui/icons/AddTwoTone";
 import CloseIcon from "@material-ui/icons/Close";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
-import { withStyles } from "@material-ui/core/styles";
+import EditIcon from '@material-ui/icons/Edit';
+import SaveIcon from '@material-ui/icons/Save';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 
-import { withSnackbar } from 'notistack';
-import Paper from "@material-ui/core/Paper";
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import Chip from "@material-ui/core/Chip";
 import CardHeader from "@material-ui/core/CardHeader";
@@ -18,8 +21,6 @@ import Modal from "@material-ui/core/Modal";
 import TextField from "@material-ui/core/TextField";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
-
-import { Redirect, withRouter } from "react-router-dom";
 
 const useTodoCardStyles = theme => ({
   root: {
@@ -81,7 +82,7 @@ const useTodoCardStyles = theme => ({
     top: "20%",
     left: "20%",
     display: "block",
-    overflow: "auto"
+    overflow: "visible"
   },
   modalContentContainer: {
     height: "90%"
@@ -98,6 +99,10 @@ const useTodoCardStyles = theme => ({
   },
   modalTextFields: {
     margin: "0.5em"
+  },
+  fullcontent: {
+    height: '70%',
+    overflow: 'auto'
   }
 });
 
@@ -177,6 +182,8 @@ class TodoPage extends Component {
         });
       } else {
         console.log("Unable to retrieve all TODOs");
+        this.props.enqueueSnackbar('Unable to retrieve all TODOs',{ variant: 'error', })
+      
       }
     });
   };
@@ -211,6 +218,7 @@ class TodoPage extends Component {
         });
       } else {
         console.log("Unable to retrieve specific TODOs");
+        this.props.enqueueSnackbar('Unable to retrieve specific TODOs',{ variant: 'error', })
       }
     });
   };
@@ -238,12 +246,17 @@ class TodoPage extends Component {
       console.dir(datapromise);
       if (response.ok) {
         console.log("TODO Created");
+        this.props.enqueueSnackbar('Successfully Created TODO',{ variant: 'success', })
         datapromise.then(body => {
           console.dir(body);
           this.setState({
             todorecords: [...this.state.todorecords,body]
           });
         });
+      }
+      else{
+        console.log("Unable to create TODOs");
+        this.props.enqueueSnackbar('Unable to create TODOs',{ variant: 'error', })
       }
     });
   };
@@ -277,6 +290,7 @@ class TodoPage extends Component {
       console.dir(datapromise);
       if (response.ok) {
         console.log("TODO Updated");
+        this.props.enqueueSnackbar('Successfully Updated TODO',{ variant: 'success', })
         datapromise.then(body => {
           console.dir(body);
           // let updatedRecords = [...this.state.todorecords]
@@ -291,6 +305,8 @@ class TodoPage extends Component {
       }
       else{
         console.log("Unable to update specific TODOs");
+        this.props.enqueueSnackbar('Unable to update specific TODOs',{ variant: 'error', })
+
       }
     });
   };
@@ -314,9 +330,12 @@ class TodoPage extends Component {
       console.dir(datapromise);
       if (response.ok) {
         console.log("Deleted Specifc TODOs");
+        this.props.enqueueSnackbar('Successfully Deleted TODO',{ variant: 'success', })
         this.getTodo();
       } else {
         console.log("Unable to delete specific TODOs");
+        this.props.enqueueSnackbar('Unable to delete specific TODOs',{ variant: 'error', })
+
       }
     });
   };
@@ -425,6 +444,7 @@ class TodoPage extends Component {
                 name="id"
                 value={todo.id}
                 onClick={this.handleTodoCardClick}
+                startIcon={<VisibilityIcon/>}
               >
                 View
               </Button>
@@ -524,7 +544,7 @@ class TodoPage extends Component {
             <h2>{todoState.curtitle}</h2>
             {chip}
             <Typography
-              className={classes.content}
+              className={classes.fullcontent}
               variant="body1"
               component="p"
             >
@@ -579,7 +599,7 @@ class TodoPage extends Component {
               variant="contained"
               id="btnModalUpdate"
               onClick={this.handleTodoUpdate}
-              startIcon={<AddTwoToneIcon />}
+              startIcon={<SaveIcon />}
             >
               Update
             </Button>
@@ -612,7 +632,7 @@ class TodoPage extends Component {
               variant="contained"
               id="btnModalEdit"
               onClick={this.handleModelEdit}
-              startIcon={<AddTwoToneIcon />}
+              startIcon={<EditIcon />}
             >
               Edit
             </Button>

@@ -49,6 +49,10 @@
   margin: 0.5em;
 }
 
+#authenticationStatus {
+  padding: 0 0.5em;
+}
+
 #TodoPage{
   margin: 0;
   padding: 0;

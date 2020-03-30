@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
-import { Redirect, withRouter } from "react-router-dom";
+import { withRouter } from "react-router-dom";
+import { withSnackbar } from 'notistack';
 
 class LoginPage extends Component {
   initialState = {
@@ -40,6 +41,8 @@ class LoginPage extends Component {
         this.setState({
           authStatus: "You have entered Invalid Credentials"
         });
+        this.props.enqueueSnackbar('You have entered Invalid Credentials',{ variant: 'error', })
+
       }
     });
   }
@@ -109,4 +112,4 @@ class LoginPage extends Component {
   }
 }
 
-export default withRouter(LoginPage);
+export default withRouter(withSnackbar(LoginPage));
