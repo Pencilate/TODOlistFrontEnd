@@ -86,16 +86,10 @@ const useTodoCardStyles = theme => ({
 
 class TodoPage extends Component {
   initialState = {
-    currentTodo: {
-      id: undefined,
-      title: undefined,
-      description: undefined,
-      status: false
-    },
-    tempId: undefined,
-    tempTitle: undefined,
-    tempDescription: undefined,
-    tempStatus: false,
+    curid: undefined,
+    curtitle: undefined,
+    curdescription: undefined,
+    curstatus: false,
     todorecords: [
       {
         id: 1,
@@ -104,7 +98,8 @@ class TodoPage extends Component {
         status: true
       },
     ],
-    openModal: false
+    openModal: false,
+    editMode: false
   };
 
   state = this.initialState;
@@ -191,11 +186,10 @@ class TodoPage extends Component {
         datapromise.then(body => {
             console.dir(body)
             this.setState({
-              currentTodo: body,
-              tempId: body.id,
-              tempTitle: body.title,
-              tempDescription: body.description,
-              tempStatus: body.status,
+              curid: body.id,
+              curtitle: body.title,
+              curdescription: body.description,
+              curstatus: body.status,
             });
         });
       } else {
@@ -233,9 +227,7 @@ class TodoPage extends Component {
   handleTodoContentChange = event => {
     const { name, value } = event.target;
     this.setState({
-    //   currentTodo: {
         [name]: value
-    //   }
     });
   };
 
@@ -256,16 +248,10 @@ class TodoPage extends Component {
 
   handleModalClose = () => {
     this.setState({
-        currentTodo: {
-            id: undefined,
-            title: undefined,
-            description: undefined,
-            status: false
-          },
-        tempId: undefined,
-        tempTitle: undefined,
-        tempDescription: undefined,
-        tempStatus: false,
+        curid: undefined,
+        curtitle: undefined,
+        curdescription: undefined,
+        curstatus: false,
         openModal: false
     });
   };
@@ -320,8 +306,8 @@ class TodoPage extends Component {
     };
 
     const TodoModalContent = props => {
-      const currTodo = props.currentTodo;
-      if (currTodo.id == undefined) {
+      const todoState = props.todoState;
+      if (todoState.curid == undefined) {
         return (
             <div className={classes.paper}>
               <div className={classes.modalContent}>
@@ -330,10 +316,10 @@ class TodoPage extends Component {
                   className={classes.modalTextFields}
                   type="text"
                   id="modaltitle"
-                  name="tempTitle"
+                  name="curtitle"
                   label="Title"
                   variant="outlined"
-                  value={currTodo.title}
+                  value={todoState.curtitle}
                   onChange={this.handleTodoContentChange}
                   fullWidth
                 />
@@ -341,10 +327,10 @@ class TodoPage extends Component {
                   className={classes.modalTextFields}
                   type="text"
                   id="modaldescription"
-                  name="tempDescription"
+                  name="curdescription"
                   label="Description"
                   variant="outlined"
-                  value={currTodo.description}
+                  value={todoState.curdescription}
                   onChange={this.handleTodoContentChange}
                   fullWidth
                   rowsMax="10"
@@ -374,7 +360,7 @@ class TodoPage extends Component {
       }
       else{
         let chip = undefined;
-        if (currTodo.status === true) {
+        if (todoState.curstatus === true) {
           chip = <Chip label="DONE" className={classes.todoChipDone} />;
         } else {
           chip = <Chip label="TODO" className={classes.todoChipUnfinished} />;
@@ -386,10 +372,10 @@ class TodoPage extends Component {
               <TextField
                 type="text"
                 id="modaltitle"
-                name="tempTitle"
+                name="curtitle"
                 label="Title"
                 variant="outlined"
-                value={currTodo.title}
+                value={todoState.curtitle}
                 InputProps={{ readOnly: true }}
                 onChange={this.handleTodoContentChange}
                 fullWidth
@@ -398,10 +384,10 @@ class TodoPage extends Component {
               <TextField
                 type="text"
                 id="modaldescription"
-                name="tempDescription"
+                name="curdescription"
                 label="Description"
                 variant="outlined"
-                value={currTodo.description}
+                value={todoState.curdescription}
                 InputProps={{ readOnly: true }}
                 onChange={this.handleTodoContentChange}
                 fullWidth
@@ -465,7 +451,7 @@ class TodoPage extends Component {
         </header>
         <TodoContent todolist={this.state.todorecords} />
         <Modal open={this.state.openModal} onClose={this.handleModalClose}>
-          <TodoModalContent currentTodo={this.state.currentTodo} />
+          <TodoModalContent todoState={this.state} />
         </Modal>
       </div>
     );
