@@ -52,14 +52,7 @@ class LoginPage extends Component{
     handleSubmit = event => {
       event.preventDefault();
       this.authenticate(this.state.username,this.state.password)
-      setTimeout(this.handleRedirect, 2000);
   }
-
-    handleRedirect = () =>{
-      if(this.props.userAuth){
-        this.props.history.replace('/todo');
-      }
-    }
 
     handleChange = event => {
         const {name,value} = event.target
