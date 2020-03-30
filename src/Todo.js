@@ -15,6 +15,8 @@ import CardActions from "@material-ui/core/CardActions";
 import Typography from "@material-ui/core/Typography";
 import Modal from "@material-ui/core/Modal";
 import TextField from "@material-ui/core/TextField";
+import ToggleButton from '@material-ui/lab/ToggleButton';
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 
 import { Redirect, withRouter } from "react-router-dom";
 
@@ -37,12 +39,20 @@ const useTodoCardStyles = theme => ({
     "-webkit-line-clamp": 1
   },
   todoChipUnfinished: {
-    margin: "0.5em 1em",
+    margin: "0.5em 0 0 1em",
     backgroundColor: "#EBAF26",
     color: "#FFFFFF"
   },
   todoChipDone: {
-    margin: "0.5em 1em",
+    margin: "0.5em 0 0 1em",
+    backgroundColor: "#8B8B8C",
+    color: "#FFFFFF"
+  },
+  todoChipUnfinishedModal: {
+    backgroundColor: "#EBAF26",
+    color: "#FFFFFF"
+  },
+  todoChipDoneModal: {
     backgroundColor: "#8B8B8C",
     color: "#FFFFFF"
   },
@@ -72,15 +82,22 @@ const useTodoCardStyles = theme => ({
     display: "block",
     overflow: "auto",
   },
-  modalContent: {
+  modalContentContainer: {
     height: "90%"
   },
-  modalButton: {
+  modalContent:{
+    margin: '0.5em 0'
+  },
+  modalButtonContainer: {
     height: "10%"
+  },
+  generalButton: {
+    backgroundColor: "#303030",
+    color: '#FFFFFF',
   },
   modalTextFields:{
       margin: '0.5em'
-  }
+  },
 
 });
 
@@ -231,6 +248,14 @@ class TodoPage extends Component {
     });
   };
 
+  handleTodoToggleBtnGroupChange = (event,value) => {
+    if (value !== null) {
+      this.setState({
+        curstatus: value
+      });
+    }
+  }
+
   handleTodoCardClick = event => {
     event.preventDefault();
     const { name, value } = event.target;
@@ -257,7 +282,7 @@ class TodoPage extends Component {
   };
 
   handleTodoDelete = () => {
-      this.deleteTodoSpecific(this.state.currentTodo.id);
+      this.deleteTodoSpecific(this.state.curid);
       this.handleModalClose();
   }
 
@@ -305,98 +330,123 @@ class TodoPage extends Component {
       return <div id="TodoContent">{todos}</div>;
     };
 
-    const TodoModalContent = props => {
+    const TodoModalContentMain = props => {
       const todoState = props.todoState;
-      if (todoState.curid == undefined) {
-        return (
-            <div className={classes.paper}>
-              <div className={classes.modalContent}>
-              <p>Create Mode</p>
-                <TextField
-                  className={classes.modalTextFields}
-                  type="text"
-                  id="modaltitle"
-                  name="curtitle"
-                  label="Title"
-                  variant="outlined"
-                  value={todoState.curtitle}
-                  onChange={this.handleTodoContentChange}
-                  fullWidth
-                />
-                <TextField
-                  className={classes.modalTextFields}
-                  type="text"
-                  id="modaldescription"
-                  name="curdescription"
-                  label="Description"
-                  variant="outlined"
-                  value={todoState.curdescription}
-                  onChange={this.handleTodoContentChange}
-                  fullWidth
-                  rowsMax="10"
-                  multiline
-                />
-              </div>
-              <div className={classes.modalButton}>
-                <Button
-                  variant="contained"
-                  id="btnModalEdit"
-                  startIcon={<AddTwoToneIcon />}
-                >
-                  Create
-                </Button>
-                <Button
-                  color="#DB4F39"
-                  variant="contained"
-                  id="btnModalClose"
-                  onClick={this.handleModalClose}
-                  startIcon={<CloseIcon />}
-                >
-                  Close
-                </Button>
-              </div>
+      if(todoState.editMode === true){
+        //Create/Edit
+        if(todoState.curid === undefined){
+          //Create
+          return (
+            <div className={classes.modalContentContainer}>
+                <TextField className={classes.modalContent} type="text" id="modaltitle" name="curtitle" label="Title" variant="outlined" value={todoState.curtitle} onChange={this.handleTodoContentChange} fullWidth />
+                <TextField className={classes.modalContent} type="text" id="modaldescription" name="curdescription" label="Description" variant="outlined" value={todoState.curdescription} onChange={this.handleTodoContentChange} fullWidth rowsMax="10" multiline />
             </div>
           );
+        }
+        else{
+          //Edit
+          return (
+            <div className={classes.modalContentContainer}>
+                <TextField className={classes.modalContent} type="text" id="modaltitle" name="curtitle" label="Title" variant="outlined" value={todoState.curtitle} onChange={this.handleTodoContentChange} fullWidth />
+                <ToggleButtonGroup
+                  value={todoState.curstatus}
+                  exclusive
+                  onChange={this.handleTodoToggleBtnGroupChange}
+                  aria-label="text alignment"
+                >
+                  <ToggleButton value={false}>
+                    TODO
+                  </ToggleButton>
+                  <ToggleButton value={true}>
+                    DONE
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <TextField className={classes.modalContent} type="text" id="modaldescription" name="curdescription" label="Description" variant="outlined" value={todoState.curdescription} onChange={this.handleTodoContentChange} fullWidth rowsMax="10" multiline />
+            </div>
+        );
+        }
       }
       else{
+        //View
         let chip = undefined;
         if (todoState.curstatus === true) {
-          chip = <Chip label="DONE" className={classes.todoChipDone} />;
+          chip = <Chip label="DONE" className={classes.todoChipDoneModal} />;
         } else {
-          chip = <Chip label="TODO" className={classes.todoChipUnfinished} />;
+          chip = <Chip label="TODO" className={classes.todoChipUnfinishedModal} />;
         }
+
         return (
-          <div className={classes.paper}>
-            <div className={classes.modalContent}>
-            <p>Edit/View Mode</p>
-              <TextField
-                type="text"
-                id="modaltitle"
-                name="curtitle"
-                label="Title"
-                variant="outlined"
-                value={todoState.curtitle}
-                InputProps={{ readOnly: true }}
-                onChange={this.handleTodoContentChange}
-                fullWidth
-              />
+          <div className={classes.modalContentContainer}>
+              <h2>{todoState.curtitle}</h2>
               {chip}
-              <TextField
-                type="text"
-                id="modaldescription"
-                name="curdescription"
-                label="Description"
-                variant="outlined"
-                value={todoState.curdescription}
-                InputProps={{ readOnly: true }}
-                onChange={this.handleTodoContentChange}
-                fullWidth
-                rowsMax="10"
-                multiline
-              />
-            </div>
-            <div className={classes.modalButton}>
+              <Typography
+                className={classes.content}
+                variant="body1"
+                component="p"
+              >
+                {todoState.curdescription}
+              </Typography>
+          </div>
+      );
+      }
+    }
+
+    const TodoModalContentButton = props => {
+      const todoState = props.todoState;
+      if((todoState.editMode === true) && (todoState.curid === undefined)){
+        //Create
+        return(
+          <div className={classes.modalButtonContainer}>
+             <Button
+                className={classes.generalButton}
+                variant="contained"
+                id="btnModalClose"
+                onClick={this.handleModalClose}
+                startIcon={<CloseIcon />}
+              >
+                Close
+              </Button>
               <Button
+                className={classes.generalButton}
+                variant="contained"
+                id="btnModalCreate"
+                startIcon={<AddTwoToneIcon />}
+              >
+                Create
+              </Button>
+          </div>
+          );
+      }
+      else if ((todoState.editMode === true) && (todoState.curid !== undefined)){
+        //Edit
+        return(
+          <div className={classes.modalButtonContainer}>
+          <Button
+             className={classes.generalButton}
+             variant="contained"
+             id="btnModalClose"
+             onClick={this.handleModalClose}
+             startIcon={<CloseIcon />}
+           >
+             Close
+           </Button>
+           <Button
+             className={classes.generalButton}
+             variant="contained"
+             id="btnModalUpdate"
+             startIcon={<AddTwoToneIcon />}
+           >
+             Update
+           </Button>
+        </div>
+        );
+      }
+      else{
+        //View
+        return(
+            <div className={classes.modalButtonContainer}>
+              <Button
+                className={classes.generalButton}
                 variant="contained"
                 id="btnModalDelete"
                 startIcon={<DeleteForeverIcon />}
@@ -405,26 +455,28 @@ class TodoPage extends Component {
               Delete
               </Button>
               <Button
+                className={classes.generalButton}
+                variant="contained"
+                id="btnModalClose"
+                onClick={this.handleModalClose}
+                startIcon={<CloseIcon />}
+              >
+                Close
+              </Button>
+              <Button
+                className={classes.generalButton}
                 variant="contained"
                 id="btnModalEdit"
                 startIcon={<AddTwoToneIcon />}
               >
                 Edit
               </Button>
-              <Button
-                  color="#DB4F39"
-                  variant="contained"
-                  id="btnModalClose"
-                  onClick={this.handleModalClose}
-                  startIcon={<CloseIcon />}
-                >
-                  Close
-                </Button>
             </div>
-          </div>
         );
       }
-    };
+        
+    }
+
 
     return (
       <div id="TodoPage">
@@ -432,6 +484,7 @@ class TodoPage extends Component {
           <h1>TODOs. Noted.</h1>
           <div>
             <Button
+              className={classes.generalButton}
               variant="contained"
               id="btnCreateTodo"
               startIcon={<AddTwoToneIcon />}
@@ -440,6 +493,7 @@ class TodoPage extends Component {
               Create
             </Button>
             <Button
+              className={classes.generalButton}
               variant="contained"
               id="btnLogout"
               startIcon={<ExitToAppIcon />}
@@ -451,7 +505,10 @@ class TodoPage extends Component {
         </header>
         <TodoContent todolist={this.state.todorecords} />
         <Modal open={this.state.openModal} onClose={this.handleModalClose}>
-          <TodoModalContent todoState={this.state} />
+          <div className={classes.paper}>
+            <TodoModalContentMain todoState={this.state}/>
+            <TodoModalContentButton todoState={this.state}/>   
+          </div>
         </Modal>
       </div>
     );

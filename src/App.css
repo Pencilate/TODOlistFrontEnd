@@ -85,6 +85,32 @@
   justify-content: center;
 }
 
-.error {
-  color:#DB4F39;
+
+.floatRight {
+  float: right;
+}
+
+#btnModalDelete, #btnLogout, .error{
+  background-color: #DB4F39;
+}
+
+#btnCreateTodo{
+  background-color: #8B8C8C;
+}
+
+#btnModalEdit {
+  float: right;
+}
+
+#btnModalClose{
+  float: right;
+  margin: 0 0.5em;
+}
+
+#btnModalCreate{
+  float: right;
+}
+
+#btnModalUpdate{
+  float: right;
 }
