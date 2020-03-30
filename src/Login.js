@@ -1,11 +1,7 @@
-
-import React, {Component} from 'react';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import {
-  Redirect,
-  withRouter
-} from "react-router-dom";
+import React, { Component } from "react";
+import Button from "@material-ui/core/Button";
+import TextField from "@material-ui/core/TextField";
+import { Redirect, withRouter } from "react-router-dom";
 
 class LoginPage extends Component{
 
@@ -90,4 +86,4 @@ class LoginPage extends Component{
     }
   }
 
-  export default withRouter(LoginPage)
+export default withRouter(LoginPage);

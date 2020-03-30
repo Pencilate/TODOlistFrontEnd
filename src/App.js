@@ -1,27 +1,26 @@
-import React, {Component} from 'react';
-import './App.css';
+import React, { Component } from "react";
+import "./App.css";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Redirect
 } from "react-router-dom";
-import LoginPage from "./Login.js"
-
+import LoginPage from "./Login.js";
+import TodoPage from "./Todo.js";
 
 class App extends Component {
-
   state = {
     isAuthenticated: false,
   }
   
   handleAuthenticationUpdate = (value) =>{
     this.setState({
-      isAuthenticated:value,
-    })
+      isAuthenticated: value
+    });
   }
 
-  render (){
+  render() {
     return (
       <Router>
         <div className="App">
@@ -39,57 +38,19 @@ class App extends Component {
   }
 }
 
-
-function PrivateRoute({children, userAuth,...rest}){
-  return(<Route
-    {...rest}
-    render={({location})=> userAuth ?
-    (
-      children
-    ) : (
-      //children
-      <Redirect to="/"/>
-    )
-    }
-  />)
-
-}
-
-function TodoPage(){
-
-  const logout = () => {
-    fetch("http://localhost:8000/todoapi/logout/",{
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      mode: 'cors', // no-cors, *cors, same-origin
-      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: 'include', // include, *same-origin, omit
-      // headers: {
-      //   'Content-Type': 'application/json'
-      'Content-Type': 'application/x-www-form-urlencoded',
-      // },
-      // redirect: 'follow', // manual, *follow, error
-      // referrerPolicy: 'no-referrer', // no-referrer, *client
-      // body:JSON.stringify({"username":username,"password":password})
-      // body:""
-    }).then((response) => {
-      let datapromise = response.json()
-      console.dir(datapromise)
-      if(response.ok){
-        console.log("User Logged Out")
-        this.props.userAuthHandler(false);
-      }
-    })  
-  }
-
+function PrivateRoute({ children, userAuth, ...rest }) {
   return (
-    <div>
-      <h1>Work in Progress</h1>
-      <button onClick={(event)=>{
-        event.preventDefault();
-        logout()
-        window.location.replace(process.env.PUBLIC_URL);
-      }}>Logout</button>
-    </div>
+    <Route
+      {...rest}
+      render={({ location }) =>
+        userAuth ? (
+          children
+        ) : (
+          //children
+          <Redirect to="/" />
+        )
+      }
+    />
   );
 }
 
