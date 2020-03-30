@@ -90,7 +90,11 @@
   float: right;
 }
 
-#btnModalDelete, #btnLogout, .error{
+.error{
+  color: #DB4F39;
+}
+
+#btnModalDelete, #btnLogout{
   background-color: #DB4F39;
 }
 
