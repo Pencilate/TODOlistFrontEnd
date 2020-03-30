@@ -11,14 +11,14 @@ import TodoPage from "./Todo.js";
 
 class App extends Component {
   state = {
-    isAuthenticated: false,
-  }
-  
-  handleAuthenticationUpdate = (value) =>{
+    isAuthenticated: false
+  };
+
+  handleAuthenticationUpdate = value => {
     this.setState({
       isAuthenticated: value
     });
-  }
+  };
 
   render() {
     return (
@@ -26,10 +26,17 @@ class App extends Component {
         <div className="App">
           <Switch>
             <Route exact path="/">
-              <LoginPage userAuthHandler={this.handleAuthenticationUpdate} userAuth={this.state.isAuthenticated}/>
+              <LoginPage
+                userAuthHandler={this.handleAuthenticationUpdate}
+                userAuth={this.state.isAuthenticated}
+              />
             </Route>
-            <PrivateRoute exact userAuth={this.state.isAuthenticated} path="/todo">
-              <TodoPage userAuthHandler={this.handleAuthenticationUpdate}/>
+            <PrivateRoute
+              exact
+              userAuth={this.state.isAuthenticated}
+              path="/todo"
+            >
+              <TodoPage userAuthHandler={this.handleAuthenticationUpdate} />
             </PrivateRoute>
           </Switch>
         </div>
