@@ -33,23 +33,15 @@ class App extends Component {
         <Router>
           <div className="App">
             <Switch>
-              <Route exact path="/">
-                <LoginPage
-                  userAuthHandler={this.handleAuthenticationUpdate}
-                  userAuth={this.state.isAuthenticated}
-                />
-              </Route>
-              <PrivateRoute
-                exact
-                userAuth={this.state.isAuthenticated}
-                path="/todo"
-              >
-                <TodoPage userAuthHandler={this.handleAuthenticationUpdate} />
-              </PrivateRoute>
-            </Switch>
-          </div>
-        </Router>
-      </SnackbarProvider>
+            <Route exact path="/"> 
+              {this.state.isAuthenticated ? <Redirect to="/todo" /> : <LoginPage userAuthHandler={this.handleAuthenticationUpdate} userAuth={this.state.isAuthenticated}/>} 
+            </Route> 
+            <PrivateRoute exact userAuth={this.state.isAuthenticated} path="/todo">
+              <TodoPage userAuthHandler={this.handleAuthenticationUpdate}/>
+            </PrivateRoute>
+          </Switch>
+        </div>
+      </Router>
     );
   }
 }
