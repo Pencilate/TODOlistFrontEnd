@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { SnackbarProvider } from 'notistack';
 import "./App.css";
 import {
   BrowserRouter as Router,
@@ -22,25 +23,27 @@ class App extends Component {
 
   render() {
     return (
-      <Router>
-        <div className="App">
-          <Switch>
-            <Route exact path="/">
-              <LoginPage
-                userAuthHandler={this.handleAuthenticationUpdate}
+      <SnackbarProvider maxSnack={3}>
+        <Router>
+          <div className="App">
+            <Switch>
+              <Route exact path="/">
+                <LoginPage
+                  userAuthHandler={this.handleAuthenticationUpdate}
+                  userAuth={this.state.isAuthenticated}
+                />
+              </Route>
+              <PrivateRoute
+                exact
                 userAuth={this.state.isAuthenticated}
-              />
-            </Route>
-            <PrivateRoute
-              exact
-              userAuth={this.state.isAuthenticated}
-              path="/todo"
-            >
-              <TodoPage userAuthHandler={this.handleAuthenticationUpdate} />
-            </PrivateRoute>
-          </Switch>
-        </div>
-      </Router>
+                path="/todo"
+              >
+                <TodoPage userAuthHandler={this.handleAuthenticationUpdate} />
+              </PrivateRoute>
+            </Switch>
+          </div>
+        </Router>
+      </SnackbarProvider>
     );
   }
 }

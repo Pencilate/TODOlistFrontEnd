@@ -6,6 +6,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import { withStyles } from "@material-ui/core/styles";
 
+import { withSnackbar } from 'notistack';
 import Paper from "@material-ui/core/Paper";
 import Card from "@material-ui/core/Card";
 import Chip from "@material-ui/core/Chip";
@@ -214,6 +215,86 @@ class TodoPage extends Component {
     });
   };
 
+  postTodo = (title,description) => {
+    var formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    console.dir(formData);
+    fetch("http://localhost:8000/todoapi/todos/", {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "include", // include, *same-origin, omit
+      // headers: {
+      //   'Content-Type': 'application/json'
+      "Content-Type": "application/x-www-form-urlencoded",
+      // },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *client
+      // body:JSON.stringify({"username":username,"password":password})
+      body:formData
+    }).then(response => {
+      let datapromise = response.json();
+      console.dir(datapromise);
+      if (response.ok) {
+        console.log("TODO Created");
+        datapromise.then(body => {
+          console.dir(body);
+          this.setState({
+            todorecords: [...this.state.todorecords,body]
+          });
+        });
+      }
+    });
+  };
+
+  putTodo = (todoId,title,description,status) => {
+    var formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    if(status){
+      formData.append("status","True")
+    }
+    else{
+      formData.append("status","False")
+    }
+    console.dir(formData);
+    fetch("http://localhost:8000/todoapi/todos/"+todoId, {
+      method: "PUT", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "include", // include, *same-origin, omit
+      // headers: {
+      //   'Content-Type': 'application/json'
+      "Content-Type": "application/x-www-form-urlencoded",
+      // },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *client
+      // body:JSON.stringify({"username":username,"password":password})
+      body:formData
+    }).then(response => {
+      let datapromise = response.json();
+      console.dir(datapromise);
+      if (response.ok) {
+        console.log("TODO Updated");
+        datapromise.then(body => {
+          console.dir(body);
+          // let updatedRecords = [...this.state.todorecords]
+          // let recordToUpdateIndex = updatedRecords.findIndex(x => x.id === body.id);
+          // updatedRecords[recordToUpdateIndex] = body
+          // this.setState({
+          //   todorecords: updatedRecords
+          // });
+          
+        });
+        this.getTodo();
+      }
+      else{
+        console.log("Unable to update specific TODOs");
+      }
+    });
+  };
+
   deleteTodoSpecific = todoId => {
     fetch("http://localhost:8000/todoapi/todos/" + todoId, {
       method: "DELETE", // *GET, POST, PUT, DELETE, etc.
@@ -247,12 +328,14 @@ class TodoPage extends Component {
     });
   };
 
-  handleTodoToggleBtnGroupChange = (event, value) => {
-    if (value !== null) {
+  handleTodoToggleBtnGroupChange = (event, statusValue) => {
+    console.log("Changed Status to "+statusValue)
+    if (statusValue !== null) {
       this.setState({
-        curstatus: value
+        curstatus: statusValue,
       });
     }
+    
   };
 
   handleTodoCardClick = event => {
@@ -275,9 +358,33 @@ class TodoPage extends Component {
       curtitle: undefined,
       curdescription: undefined,
       curstatus: false,
-      openModal: false
+      openModal: false,
+      editMode:false
     });
   };
+
+  handleModelEdit = () => {
+    this.setState({
+      editMode: true
+    });
+  };
+
+  handleModelEditCancel = () => {
+    this.getTodoSpecific(this.state.curid);
+    this.setState({
+      editMode: false
+    });
+  }
+
+  handleTodoCreate = () => {
+    this.postTodo(this.state.curtitle,this.state.curdescription);
+    this.handleModalClose();
+  }
+  
+  handleTodoUpdate = () => {
+    this.putTodo(this.state.curid,this.state.curtitle,this.state.curdescription,this.state.curstatus)
+    this.handleModalClose();
+  }
 
   handleTodoDelete = () => {
     this.deleteTodoSpecific(this.state.curid);
@@ -343,8 +450,8 @@ class TodoPage extends Component {
                 name="curtitle"
                 label="Title"
                 variant="outlined"
-                value={todoState.curtitle}
-                onChange={this.handleTodoContentChange}
+                defaultValue={todoState.curtitle}
+                onBlur={this.handleTodoContentChange}
                 fullWidth
               />
               <TextField
@@ -354,8 +461,8 @@ class TodoPage extends Component {
                 name="curdescription"
                 label="Description"
                 variant="outlined"
-                value={todoState.curdescription}
-                onChange={this.handleTodoContentChange}
+                defaultValue={todoState.curdescription}
+                onBlur={this.handleTodoContentChange}
                 fullWidth
                 rowsMax="10"
                 multiline
@@ -373,15 +480,14 @@ class TodoPage extends Component {
                 name="curtitle"
                 label="Title"
                 variant="outlined"
-                value={todoState.curtitle}
-                onChange={this.handleTodoContentChange}
+                defaultValue={todoState.curtitle}
+                onBlur={this.handleTodoContentChange}
                 fullWidth
               />
               <ToggleButtonGroup
                 value={todoState.curstatus}
                 exclusive
                 onChange={this.handleTodoToggleBtnGroupChange}
-                aria-label="text alignment"
               >
                 <ToggleButton value={false}>TODO</ToggleButton>
                 <ToggleButton value={true}>DONE</ToggleButton>
@@ -393,8 +499,8 @@ class TodoPage extends Component {
                 name="curdescription"
                 label="Description"
                 variant="outlined"
-                value={todoState.curdescription}
-                onChange={this.handleTodoContentChange}
+                defaultValue={todoState.curdescription}
+                onBlur={this.handleTodoContentChange}
                 fullWidth
                 rowsMax="10"
                 multiline
@@ -448,6 +554,7 @@ class TodoPage extends Component {
               className={classes.generalButton}
               variant="contained"
               id="btnModalCreate"
+              onClick={this.handleTodoCreate}
               startIcon={<AddTwoToneIcon />}
             >
               Create
@@ -462,7 +569,7 @@ class TodoPage extends Component {
               className={classes.generalButton}
               variant="contained"
               id="btnModalClose"
-              onClick={this.handleModalClose}
+              onClick={this.handleModelEditCancel}
               startIcon={<CloseIcon />}
             >
               Close
@@ -471,6 +578,7 @@ class TodoPage extends Component {
               className={classes.generalButton}
               variant="contained"
               id="btnModalUpdate"
+              onClick={this.handleTodoUpdate}
               startIcon={<AddTwoToneIcon />}
             >
               Update
@@ -503,6 +611,7 @@ class TodoPage extends Component {
               className={classes.generalButton}
               variant="contained"
               id="btnModalEdit"
+              onClick={this.handleModelEdit}
               startIcon={<AddTwoToneIcon />}
             >
               Edit
@@ -522,7 +631,10 @@ class TodoPage extends Component {
               variant="contained"
               id="btnCreateTodo"
               startIcon={<AddTwoToneIcon />}
-              onClick={this.handleOpenModal}
+              onClick={()=>{
+                this.handleOpenModal()
+                this.handleModelEdit()
+              }}
             >
               Create
             </Button>
@@ -549,4 +661,4 @@ class TodoPage extends Component {
   }
 }
 
-export default withStyles(useTodoCardStyles)(TodoPage);
+export default withStyles(useTodoCardStyles)(withSnackbar(TodoPage));
