@@ -1,18 +1,18 @@
 import React, { Component } from "react";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
-import { Redirect, withRouter } from "react-router-dom";
+import { withRouter } from "react-router-dom";
+import { withSnackbar } from 'notistack';
 
-class LoginPage extends Component{
+class LoginPage extends Component {
+  initialState = {
+    username: "",
+    password: "",
+    authStatus: ""
+  };
 
-    initialState = {
-        username: '',
-        password: '',
-        authStatus: '',
-    }
-  
-    state = this.initialState
-  
+  state = this.initialState;
+
     authenticate(username,password){
       var formData = new FormData();
       formData.append("username",username);
@@ -41,6 +41,7 @@ class LoginPage extends Component{
           this.setState({
             authStatus:'You have entered Invalid Credentials',
           })
+          this.props.enqueueSnackbar('You have entered Invalid Credentials',{ variant: 'error', })
         }
       })  
     }
@@ -48,7 +49,7 @@ class LoginPage extends Component{
     handleSubmit = event => {
       event.preventDefault();
       this.authenticate(this.state.username,this.state.password)
-  }
+    }
 
     handleChange = event => {
         const {name,value} = event.target
@@ -59,31 +60,48 @@ class LoginPage extends Component{
           authStatus:'',
         })
     }
-  
 
-  
-    render(){
-        const {username,password} = this.state;
-        return (
-            <div id="LandingPage">
-              <div id="LandingImage">
-                <h1>TODOs. Noted.</h1>
-              </div>
-              <div id="LandingLogin">
-                <div id="LoginForm" className="MuiTextField-root">
-                  <h1>Welcome Back.</h1>
-                  <form onSubmit={this.handleSubmit}>
-                    <TextField type="text" id="fieldUsername" name="username" label="Username" variant="outlined" value={username} onChange={this.handleChange}/>
-                    <TextField type="password" id="fieldPassword" name="password" label="Password" variant="outlined" value={password} onChange={this.handleChange}/>
-                    <p className="error" id="authenticationStatus">{this.state.authStatus}</p>
-                    <Button variant="outlined" type="submit" id="btnLogin" >Login</Button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          
-            );
-    }
+  render() {
+    const { username, password } = this.state;
+    return (
+      <div id="LandingPage">
+        <div id="LandingImage">
+          <h1>TODOs. Noted.</h1>
+        </div>
+        <div id="LandingLogin">
+          <div id="LoginForm" className="MuiTextField-root">
+            <h1>Welcome Back.</h1>
+            <form onSubmit={this.handleSubmit}>
+              <TextField
+                type="text"
+                id="fieldUsername"
+                name="username"
+                label="Username"
+                variant="outlined"
+                value={username}
+                onChange={this.handleChange}
+              />
+              <TextField
+                type="password"
+                id="fieldPassword"
+                name="password"
+                label="Password"
+                variant="outlined"
+                value={password}
+                onChange={this.handleChange}
+              />
+              <p className="error" id="authenticationStatus">
+                {this.state.authStatus}
+              </p>
+              <Button variant="outlined" type="submit" id="btnLogin">
+                Login
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
   }
+}
 
-export default withRouter(LoginPage);
+export default withRouter(withSnackbar(LoginPage));

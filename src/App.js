@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { SnackbarProvider } from 'notistack';
 import "./App.css";
 import {
   BrowserRouter as Router,
@@ -11,20 +12,27 @@ import TodoPage from "./Todo.js";
 
 class App extends Component {
   state = {
-    isAuthenticated: false,
-  }
-  
-  handleAuthenticationUpdate = (value) =>{
+    isAuthenticated: false
+  };
+
+  handleAuthenticationUpdate = value => {
     this.setState({
       isAuthenticated: value
     });
-  }
+  };
 
   render() {
     return (
-      <Router>
-        <div className="App">
-          <Switch>
+      <SnackbarProvider
+      maxSnack={1}
+      anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      >
+        <Router>
+          <div className="App">
+            <Switch>
             <Route exact path="/"> 
               {this.state.isAuthenticated ? <Redirect to="/todo" /> : <LoginPage userAuthHandler={this.handleAuthenticationUpdate} userAuth={this.state.isAuthenticated}/>} 
             </Route> 
@@ -34,6 +42,7 @@ class App extends Component {
           </Switch>
         </div>
       </Router>
+    </SnackbarProvider>
     );
   }
 }

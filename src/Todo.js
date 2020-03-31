@@ -1,12 +1,16 @@
 import React, { Component } from "react";
-import Button from "@material-ui/core/Button";
-import ExitToAppIcon from "@material-ui/icons/ExitToApp";
-import AddTwoToneIcon from "@material-ui/icons/AddTwoTone";
-import CloseIcon from '@material-ui/icons/Close';
-import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
+import { withSnackbar } from 'notistack';
 import { withStyles } from "@material-ui/core/styles";
 
-import Paper from "@material-ui/core/Paper";
+import ExitToAppIcon from "@material-ui/icons/ExitToApp";
+import AddTwoToneIcon from "@material-ui/icons/AddTwoTone";
+import CloseIcon from "@material-ui/icons/Close";
+import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
+import EditIcon from '@material-ui/icons/Edit';
+import SaveIcon from '@material-ui/icons/Save';
+import VisibilityIcon from '@material-ui/icons/Visibility';
+
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import Chip from "@material-ui/core/Chip";
 import CardHeader from "@material-ui/core/CardHeader";
@@ -15,8 +19,8 @@ import CardActions from "@material-ui/core/CardActions";
 import Typography from "@material-ui/core/Typography";
 import Modal from "@material-ui/core/Modal";
 import TextField from "@material-ui/core/TextField";
-
-import { Redirect, withRouter } from "react-router-dom";
+import ToggleButton from "@material-ui/lab/ToggleButton";
+import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
 
 const useTodoCardStyles = theme => ({
   root: {
@@ -37,12 +41,20 @@ const useTodoCardStyles = theme => ({
     "-webkit-line-clamp": 1
   },
   todoChipUnfinished: {
-    margin: "0.5em 1em",
+    margin: "0.5em 0 0 1em",
     backgroundColor: "#EBAF26",
     color: "#FFFFFF"
   },
   todoChipDone: {
-    margin: "0.5em 1em",
+    margin: "0.5em 0 0 1em",
+    backgroundColor: "#8B8B8C",
+    color: "#FFFFFF"
+  },
+  todoChipUnfinishedModal: {
+    backgroundColor: "#EBAF26",
+    color: "#FFFFFF"
+  },
+  todoChipDoneModal: {
     backgroundColor: "#8B8B8C",
     color: "#FFFFFF"
   },
@@ -70,41 +82,46 @@ const useTodoCardStyles = theme => ({
     top: "20%",
     left: "20%",
     display: "block",
-    overflow: "auto",
+    overflow: "visible"
   },
-  modalContent: {
+  modalContentContainer: {
     height: "90%"
   },
-  modalButton: {
+  modalContent: {
+    margin: "0.5em 0"
+  },
+  modalButtonContainer: {
     height: "10%"
   },
-  modalTextFields:{
-      margin: '0.5em'
+  generalButton: {
+    backgroundColor: "#303030",
+    color: "#FFFFFF"
+  },
+  modalTextFields: {
+    margin: "0.5em"
+  },
+  fullcontent: {
+    height: '70%',
+    overflow: 'auto'
   }
-
 });
 
 class TodoPage extends Component {
   initialState = {
-    currentTodo: {
-      id: undefined,
-      title: undefined,
-      description: undefined,
-      status: false
-    },
-    tempId: undefined,
-    tempTitle: undefined,
-    tempDescription: undefined,
-    tempStatus: false,
+    curid: undefined,
+    curtitle: undefined,
+    curdescription: undefined,
+    curstatus: false,
     todorecords: [
       {
         id: 1,
         title: "TestInitialTodo",
         description: "InitialTODO",
         status: true
-      },
+      }
     ],
-    openModal: false
+    openModal: false,
+    editMode: false
   };
 
   state = this.initialState;
@@ -160,17 +177,19 @@ class TodoPage extends Component {
         datapromise.then(body => {
           console.dir(body.records);
           this.setState({
-              todorecords: body.records
-          })
+            todorecords: body.records
+          });
         });
       } else {
         console.log("Unable to retrieve all TODOs");
+        this.props.enqueueSnackbar('Unable to retrieve all TODOs',{ variant: 'error', })
+      
       }
     });
   };
 
-  getTodoSpecific = (todoId) => {
-    fetch("http://localhost:8000/todoapi/todos/"+todoId, {
+  getTodoSpecific = todoId => {
+    fetch("http://localhost:8000/todoapi/todos/" + todoId, {
       method: "GET", // *GET, POST, PUT, DELETE, etc.
       mode: "cors", // no-cors, *cors, same-origin
       // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
@@ -189,23 +208,111 @@ class TodoPage extends Component {
       if (response.ok) {
         console.log("Retrieved Specifc TODOs");
         datapromise.then(body => {
-            console.dir(body)
-            this.setState({
-              currentTodo: body,
-              tempId: body.id,
-              tempTitle: body.title,
-              tempDescription: body.description,
-              tempStatus: body.status,
-            });
+          console.dir(body);
+          this.setState({
+            curid: body.id,
+            curtitle: body.title,
+            curdescription: body.description,
+            curstatus: body.status
+          });
         });
       } else {
         console.log("Unable to retrieve specific TODOs");
+        this.props.enqueueSnackbar('Unable to retrieve specific TODOs',{ variant: 'error', })
       }
     });
   };
 
-  deleteTodoSpecific = (todoId) => {
+  postTodo = (title,description) => {
+    var formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    console.dir(formData);
+    fetch("http://localhost:8000/todoapi/todos/", {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "include", // include, *same-origin, omit
+      // headers: {
+      //   'Content-Type': 'application/json'
+      "Content-Type": "application/x-www-form-urlencoded",
+      // },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *client
+      // body:JSON.stringify({"username":username,"password":password})
+      body:formData
+    }).then(response => {
+      let datapromise = response.json();
+      console.dir(datapromise);
+      if (response.ok) {
+        console.log("TODO Created");
+        this.props.enqueueSnackbar('Successfully Created TODO',{ variant: 'success', })
+        datapromise.then(body => {
+          console.dir(body);
+          this.setState({
+            todorecords: [...this.state.todorecords,body]
+          });
+        });
+      }
+      else{
+        console.log("Unable to create TODOs");
+        this.props.enqueueSnackbar('Unable to create TODOs',{ variant: 'error', })
+      }
+    });
+  };
+
+  putTodo = (todoId,title,description,status) => {
+    var formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    if(status){
+      formData.append("status","True")
+    }
+    else{
+      formData.append("status","False")
+    }
+    console.dir(formData);
     fetch("http://localhost:8000/todoapi/todos/"+todoId, {
+      method: "PUT", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "include", // include, *same-origin, omit
+      // headers: {
+      //   'Content-Type': 'application/json'
+      "Content-Type": "application/x-www-form-urlencoded",
+      // },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *client
+      // body:JSON.stringify({"username":username,"password":password})
+      body:formData
+    }).then(response => {
+      let datapromise = response.json();
+      console.dir(datapromise);
+      if (response.ok) {
+        console.log("TODO Updated");
+        this.props.enqueueSnackbar('Successfully Updated TODO',{ variant: 'success', })
+        datapromise.then(body => {
+          console.dir(body);
+          // let updatedRecords = [...this.state.todorecords]
+          // let recordToUpdateIndex = updatedRecords.findIndex(x => x.id === body.id);
+          // updatedRecords[recordToUpdateIndex] = body
+          // this.setState({
+          //   todorecords: updatedRecords
+          // });
+          
+        });
+        this.getTodo();
+      }
+      else{
+        console.log("Unable to update specific TODOs");
+        this.props.enqueueSnackbar('Unable to update specific TODOs',{ variant: 'error', })
+
+      }
+    });
+  };
+
+  deleteTodoSpecific = todoId => {
+    fetch("http://localhost:8000/todoapi/todos/" + todoId, {
       method: "DELETE", // *GET, POST, PUT, DELETE, etc.
       mode: "cors", // no-cors, *cors, same-origin
       // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
@@ -223,9 +330,12 @@ class TodoPage extends Component {
       console.dir(datapromise);
       if (response.ok) {
         console.log("Deleted Specifc TODOs");
+        this.props.enqueueSnackbar('Successfully Deleted TODO',{ variant: 'success', })
         this.getTodo();
       } else {
         console.log("Unable to delete specific TODOs");
+        this.props.enqueueSnackbar('Unable to delete specific TODOs',{ variant: 'error', })
+
       }
     });
   };
@@ -233,10 +343,18 @@ class TodoPage extends Component {
   handleTodoContentChange = event => {
     const { name, value } = event.target;
     this.setState({
-    //   currentTodo: {
-        [name]: value
-    //   }
+      [name]: value
     });
+  };
+
+  handleTodoToggleBtnGroupChange = (event, statusValue) => {
+    console.log("Changed Status to "+statusValue)
+    if (statusValue !== null) {
+      this.setState({
+        curstatus: statusValue,
+      });
+    }
+    
   };
 
   handleTodoCardClick = event => {
@@ -245,38 +363,55 @@ class TodoPage extends Component {
     console.dir(event.target);
     this.getTodoSpecific(event.target.parentElement.value);
     this.handleOpenModal();
-
   };
 
-  handleOpenModal = () =>{
+  handleOpenModal = () => {
     this.setState({
-        openModal:true,
-    })
-  }
-
-  handleModalClose = () => {
-    this.setState({
-        currentTodo: {
-            id: undefined,
-            title: undefined,
-            description: undefined,
-            status: false
-          },
-        tempId: undefined,
-        tempTitle: undefined,
-        tempDescription: undefined,
-        tempStatus: false,
-        openModal: false
+      openModal: true
     });
   };
 
-  handleTodoDelete = () => {
-      this.deleteTodoSpecific(this.state.currentTodo.id);
-      this.handleModalClose();
+  handleModalClose = () => {
+    this.setState({
+      curid: undefined,
+      curtitle: undefined,
+      curdescription: undefined,
+      curstatus: false,
+      openModal: false,
+      editMode:false
+    });
+  };
+
+  handleModelEdit = () => {
+    this.setState({
+      editMode: true
+    });
+  };
+
+  handleModelEditCancel = () => {
+    this.getTodoSpecific(this.state.curid);
+    this.setState({
+      editMode: false
+    });
   }
 
-  componentDidMount(){
-    this.getTodo()
+  handleTodoCreate = () => {
+    this.postTodo(this.state.curtitle,this.state.curdescription);
+    this.handleModalClose();
+  }
+  
+  handleTodoUpdate = () => {
+    this.putTodo(this.state.curid,this.state.curtitle,this.state.curdescription,this.state.curstatus)
+    this.handleModalClose();
+  }
+
+  handleTodoDelete = () => {
+    this.deleteTodoSpecific(this.state.curid);
+    this.handleModalClose();
+  };
+
+  componentDidMount() {
+    this.getTodo();
   }
 
   render() {
@@ -309,6 +444,7 @@ class TodoPage extends Component {
                 name="id"
                 value={todo.id}
                 onClick={this.handleTodoCardClick}
+                startIcon={<VisibilityIcon/>}
               >
                 View
               </Button>
@@ -319,122 +455,187 @@ class TodoPage extends Component {
       return <div id="TodoContent">{todos}</div>;
     };
 
-    const TodoModalContent = props => {
-      const currTodo = props.currentTodo;
-      if (currTodo.id == undefined) {
-        return (
-            <div className={classes.paper}>
-              <div className={classes.modalContent}>
-              <p>Create Mode</p>
-                <TextField
-                  className={classes.modalTextFields}
-                  type="text"
-                  id="modaltitle"
-                  name="tempTitle"
-                  label="Title"
-                  variant="outlined"
-                  value={currTodo.title}
-                  onChange={this.handleTodoContentChange}
-                  fullWidth
-                />
-                <TextField
-                  className={classes.modalTextFields}
-                  type="text"
-                  id="modaldescription"
-                  name="tempDescription"
-                  label="Description"
-                  variant="outlined"
-                  value={currTodo.description}
-                  onChange={this.handleTodoContentChange}
-                  fullWidth
-                  rowsMax="10"
-                  multiline
-                />
-              </div>
-              <div className={classes.modalButton}>
-                <Button
-                  variant="contained"
-                  id="btnModalEdit"
-                  startIcon={<AddTwoToneIcon />}
-                >
-                  Create
-                </Button>
-                <Button
-                  color="#DB4F39"
-                  variant="contained"
-                  id="btnModalClose"
-                  onClick={this.handleModalClose}
-                  startIcon={<CloseIcon />}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          );
-      }
-      else{
-        let chip = undefined;
-        if (currTodo.status === true) {
-          chip = <Chip label="DONE" className={classes.todoChipDone} />;
-        } else {
-          chip = <Chip label="TODO" className={classes.todoChipUnfinished} />;
-        }
-        return (
-          <div className={classes.paper}>
-            <div className={classes.modalContent}>
-            <p>Edit/View Mode</p>
+    const TodoModalContentMain = props => {
+      const todoState = props.todoState;
+      if (todoState.editMode === true) {
+        //Create/Edit
+        if (todoState.curid === undefined) {
+          //Create
+          return (
+            <div className={classes.modalContentContainer}>
               <TextField
+                className={classes.modalContent}
                 type="text"
                 id="modaltitle"
-                name="tempTitle"
+                name="curtitle"
                 label="Title"
                 variant="outlined"
-                value={currTodo.title}
-                InputProps={{ readOnly: true }}
-                onChange={this.handleTodoContentChange}
+                defaultValue={todoState.curtitle}
+                onBlur={this.handleTodoContentChange}
                 fullWidth
               />
-              {chip}
               <TextField
+                className={classes.modalContent}
                 type="text"
                 id="modaldescription"
-                name="tempDescription"
+                name="curdescription"
                 label="Description"
                 variant="outlined"
-                value={currTodo.description}
-                InputProps={{ readOnly: true }}
-                onChange={this.handleTodoContentChange}
+                defaultValue={todoState.curdescription}
+                onBlur={this.handleTodoContentChange}
                 fullWidth
                 rowsMax="10"
                 multiline
               />
             </div>
-            <div className={classes.modalButton}>
-              <Button
-                variant="contained"
-                id="btnModalDelete"
-                startIcon={<DeleteForeverIcon />}
-                onClick={this.handleTodoDelete}
+          );
+        } else {
+          //Edit
+          return (
+            <div className={classes.modalContentContainer}>
+              <TextField
+                className={classes.modalContent}
+                type="text"
+                id="modaltitle"
+                name="curtitle"
+                label="Title"
+                variant="outlined"
+                defaultValue={todoState.curtitle}
+                onBlur={this.handleTodoContentChange}
+                fullWidth
+              />
+              <ToggleButtonGroup
+                value={todoState.curstatus}
+                exclusive
+                onChange={this.handleTodoToggleBtnGroupChange}
               >
-              Delete
-              </Button>
-              <Button
-                variant="contained"
-                id="btnModalEdit"
-                startIcon={<AddTwoToneIcon />}
-              >
-                Edit
-              </Button>
-              <Button
-                  color="#DB4F39"
-                  variant="contained"
-                  id="btnModalClose"
-                  onClick={this.handleModalClose}
-                  startIcon={<CloseIcon />}
-                >
-                  Close
-                </Button>
+                <ToggleButton value={false}>TODO</ToggleButton>
+                <ToggleButton value={true}>DONE</ToggleButton>
+              </ToggleButtonGroup>
+              <TextField
+                className={classes.modalContent}
+                type="text"
+                id="modaldescription"
+                name="curdescription"
+                label="Description"
+                variant="outlined"
+                defaultValue={todoState.curdescription}
+                onBlur={this.handleTodoContentChange}
+                fullWidth
+                rowsMax="10"
+                multiline
+              />
             </div>
+          );
+        }
+      } else {
+        //View
+        let chip = undefined;
+        if (todoState.curstatus === true) {
+          chip = <Chip label="DONE" className={classes.todoChipDoneModal} />;
+        } else {
+          chip = (
+            <Chip label="TODO" className={classes.todoChipUnfinishedModal} />
+          );
+        }
+
+        return (
+          <div className={classes.modalContentContainer}>
+            <h2>{todoState.curtitle}</h2>
+            {chip}
+            <Typography
+              className={classes.fullcontent}
+              variant="body1"
+              component="p"
+            >
+              {todoState.curdescription}
+            </Typography>
+          </div>
+        );
+      }
+    };
+
+    const TodoModalContentButton = props => {
+      const todoState = props.todoState;
+      if (todoState.editMode === true && todoState.curid === undefined) {
+        //Create
+        return (
+          <div className={classes.modalButtonContainer}>
+            <Button
+              className={classes.generalButton}
+              variant="contained"
+              id="btnModalClose"
+              onClick={this.handleModalClose}
+              startIcon={<CloseIcon />}
+            >
+              Close
+            </Button>
+            <Button
+              className={classes.generalButton}
+              variant="contained"
+              id="btnModalCreate"
+              onClick={this.handleTodoCreate}
+              startIcon={<AddTwoToneIcon />}
+            >
+              Create
+            </Button>
+          </div>
+        );
+      } else if (todoState.editMode === true && todoState.curid !== undefined) {
+        //Edit
+        return (
+          <div className={classes.modalButtonContainer}>
+            <Button
+              className={classes.generalButton}
+              variant="contained"
+              id="btnModalClose"
+              onClick={this.handleModelEditCancel}
+              startIcon={<CloseIcon />}
+            >
+              Close
+            </Button>
+            <Button
+              className={classes.generalButton}
+              variant="contained"
+              id="btnModalUpdate"
+              onClick={this.handleTodoUpdate}
+              startIcon={<SaveIcon />}
+            >
+              Update
+            </Button>
+          </div>
+        );
+      } else {
+        //View
+        return (
+          <div className={classes.modalButtonContainer}>
+            <Button
+              className={classes.generalButton}
+              variant="contained"
+              id="btnModalDelete"
+              startIcon={<DeleteForeverIcon />}
+              onClick={this.handleTodoDelete}
+            >
+              Delete
+            </Button>
+            <Button
+              className={classes.generalButton}
+              variant="contained"
+              id="btnModalClose"
+              onClick={this.handleModalClose}
+              startIcon={<CloseIcon />}
+            >
+              Close
+            </Button>
+            <Button
+              className={classes.generalButton}
+              variant="contained"
+              id="btnModalEdit"
+              onClick={this.handleModelEdit}
+              startIcon={<EditIcon />}
+            >
+              Edit
+            </Button>
           </div>
         );
       }
@@ -446,14 +647,19 @@ class TodoPage extends Component {
           <h1>TODOs. Noted.</h1>
           <div>
             <Button
+              className={classes.generalButton}
               variant="contained"
               id="btnCreateTodo"
               startIcon={<AddTwoToneIcon />}
-              onClick={this.handleOpenModal}
+              onClick={()=>{
+                this.handleOpenModal()
+                this.handleModelEdit()
+              }}
             >
               Create
             </Button>
             <Button
+              className={classes.generalButton}
               variant="contained"
               id="btnLogout"
               startIcon={<ExitToAppIcon />}
@@ -465,11 +671,14 @@ class TodoPage extends Component {
         </header>
         <TodoContent todolist={this.state.todorecords} />
         <Modal open={this.state.openModal} onClose={this.handleModalClose}>
-          <TodoModalContent currentTodo={this.state.currentTodo} />
+          <div className={classes.paper}>
+            <TodoModalContentMain todoState={this.state} />
+            <TodoModalContentButton todoState={this.state} />
+          </div>
         </Modal>
       </div>
     );
   }
 }
 
-export default withStyles(useTodoCardStyles)(TodoPage);
+export default withStyles(useTodoCardStyles)(withSnackbar(TodoPage));

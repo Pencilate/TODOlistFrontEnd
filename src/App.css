@@ -31,7 +31,7 @@
 
 #LoginForm{
   position: relative;
-  top: 6em;
+  top: 7em;
 }
 #LoginForm form{
   display: grid;
@@ -47,6 +47,10 @@
 
 #LoginForm div.MuiTextField-root, #LoginForm button.MuiButton-root{
   margin: 0.5em;
+}
+
+#authenticationStatus {
+  padding: 0 0.5em;
 }
 
 #TodoPage{
@@ -85,6 +89,36 @@
   justify-content: center;
 }
 
-.error {
-  color:#DB4F39;
+
+.floatRight {
+  float: right;
+}
+
+.error{
+  color: #DB4F39;
+}
+
+#btnModalDelete, #btnLogout{
+  background-color: #DB4F39;
+}
+
+#btnCreateTodo{
+  background-color: #8B8C8C;
+}
+
+#btnModalEdit {
+  float: right;
+}
+
+#btnModalClose{
+  float: right;
+  margin: 0 0.5em;
+}
+
+#btnModalCreate{
+  float: right;
+}
+
+#btnModalUpdate{
+  float: right;
 }
