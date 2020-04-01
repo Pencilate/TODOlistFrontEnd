@@ -3,6 +3,8 @@ import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import { withRouter } from "react-router-dom";
 import { withSnackbar } from 'notistack';
+import { connect } from 'react-redux'
+import { login, setModalEditable } from './actions.js'
 
 class LoginPage extends Component {
   initialState = {
@@ -36,7 +38,7 @@ class LoginPage extends Component {
         console.dir(datapromise)
         if(response.ok){
           console.log("User Authenticated")
-          this.props.userAuthHandler(true);
+          this.props.userAuthHandler();
         }else{
           this.setState({
             authStatus:'You have entered Invalid Credentials',
@@ -104,4 +106,12 @@ class LoginPage extends Component {
   }
 }
 
-export default withRouter(withSnackbar(LoginPage));
+const mapDispatchToProps = (dispatch) => {
+  return {
+    userAuthHandler: () => {
+      dispatch(login())
+    }
+  }
+}
+
+export default connect(null, mapDispatchToProps)(withRouter(withSnackbar(LoginPage)));
