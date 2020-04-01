@@ -29,28 +29,28 @@
         break;
 
       case 'TODO_UPDATE':
-        let updatedRecords = [...state.todorecords]
-        let recordToUpdateIndex = updatedRecords.findIndex(x => x.id === action.id);
-        updatedRecords[recordToUpdateIndex] = {id:action.id,title:action.title,description:action.description,status:action.status}
+        let updatedRecordsForPut = [...state.todorecords]
+        let recordToUpdateIndex = updatedRecordsForPut.findIndex(x => x.id === action.id);
+        updatedRecordsForPut[recordToUpdateIndex] = {id:action.id,title:action.title,description:action.description,status:action.status}
         return {
             curid: state.curid,
             curtitle: state.curtitle,
             curdescription: state.curdescription,
             curstatus: state.curstatus,
-            todorecords:updatedRecords
+            todorecords:updatedRecordsForPut
         }
         break;
 
       case 'TODO_DELETE':
-        updatedRecords = [...state.todorecords]
-        recordToUpdateIndex = updatedRecords.findIndex(x => x.id === action.id);
-        updatedRecords.splice(recordToUpdateIndex,1)
+        let updatedRecordsForDel = [...state.todorecords]
+        let recordToDeleteIndex = updatedRecordsForDel.findIndex(x => x.id === action.id);
+        updatedRecordsForDel.splice(recordToDeleteIndex,1)
         return {
             curid: state.curid,
             curtitle: state.curtitle,
             curdescription: state.curdescription,
             curstatus: state.curstatus,
-            todorecords:updatedRecords
+            todorecords:updatedRecordsForDel
         }
         break;
 
@@ -62,8 +62,16 @@
             curstatus: state.curstatus,
             todorecords:action.records
         }
-       break;
-       
+        break;
+      case 'TODO_SET_CURRENT':
+        return {
+            curid: action.id,
+            curtitle: action.title,
+            curdescription: action.description,
+            curstatus: action.status,
+            todorecords: state.todorecords
+        }
+        break;
       default:
         return state
     }

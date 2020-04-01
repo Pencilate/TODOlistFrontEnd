@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import { Provider } from 'react-redux'
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
 import * as serviceWorker from './serviceWorker';
 import todoAppReducers from './reducers.js'
+import thunk from 'redux-thunk'
 
-const store = createStore(todoAppReducers)
+const store = createStore(todoAppReducers,applyMiddleware(thunk))
 
 //Temporary, just to check the structure of store
 console.log(store.getState())
