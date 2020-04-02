@@ -19,7 +19,6 @@ class LoginPage extends Component {
       var formData = new FormData();
       formData.append("username",username);
       formData.append("password",password);   
-      console.dir(formData)
       fetch("http://localhost:8000/todoapi/login/",{
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         mode: 'cors', // no-cors, *cors, same-origin
@@ -35,9 +34,7 @@ class LoginPage extends Component {
         body:formData
       }).then((response) => {
         let datapromise = response.json()
-        console.dir(datapromise)
         if(response.ok){
-          console.log("User Authenticated")
           this.props.userAuthHandler();
         }else{
           this.setState({

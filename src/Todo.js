@@ -134,9 +134,7 @@ class TodoPage extends Component {
       // body:""
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("User Logged Out");
         this.props.userAuthHandler();
         this.props.enqueueSnackbar('Successful Logout',{ variant: 'success', })
       }
@@ -159,16 +157,11 @@ class TodoPage extends Component {
       //   body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("Retrieved All TODOs");
         datapromise.then(body => {
-          console.dir(body.records);
           this.props.updateEntireTodoList(body.records);
-
         });
       } else {
-        console.log("Unable to retrieve all TODOs");
         this.props.enqueueSnackbar('Unable to retrieve all TODOs',{ variant: 'error', })
       
       }
@@ -191,15 +184,11 @@ class TodoPage extends Component {
       //   body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("Retrieved Specifc TODOs");
         datapromise.then(body => {
-          console.dir(body);
           this.props.setCurrentTodo(body.id,body.title,body.description,body.status)
         });
       } else {
-        console.log("Unable to retrieve specific TODOs");
         this.props.enqueueSnackbar('Unable to retrieve specific TODOs',{ variant: 'error', })
       }
     });
@@ -209,7 +198,6 @@ class TodoPage extends Component {
     var formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    console.dir(formData);
     fetch("http://localhost:8000/todoapi/todos/", {
       method: "POST", // *GET, POST, PUT, DELETE, etc.
       mode: "cors", // no-cors, *cors, same-origin
@@ -225,18 +213,14 @@ class TodoPage extends Component {
       body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("TODO Created");
         this.props.enqueueSnackbar('Successfully Created TODO',{ variant: 'success', })
         datapromise.then(body => {
-          console.dir(body);
           this.props.createTodo(body.id,body.title,body.description,body.status);
 
         });
       }
       else{
-        console.log("Unable to create TODOs");
         this.props.enqueueSnackbar('Unable to create TODOs',{ variant: 'error', })
       }
     });
@@ -252,7 +236,6 @@ class TodoPage extends Component {
     else{
       formData.append("status","False")
     }
-    console.dir(formData);
     fetch("http://localhost:8000/todoapi/todos/"+todoId, {
       method: "PUT", // *GET, POST, PUT, DELETE, etc.
       mode: "cors", // no-cors, *cors, same-origin
@@ -268,18 +251,14 @@ class TodoPage extends Component {
       body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("TODO Updated");
         this.props.enqueueSnackbar('Successfully Updated TODO',{ variant: 'success', })
         datapromise.then(body => {
-          console.dir(body);
           let tempStatus = (body.status == "True" ? true : false)
           this.props.updateTodo(body.id,body.title,body.description, tempStatus)
         });
       }
       else{
-        console.log("Unable to update specific TODOs");
         this.props.enqueueSnackbar('Unable to update specific TODOs',{ variant: 'error', })
 
       }
@@ -302,14 +281,11 @@ class TodoPage extends Component {
       //   body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("Deleted Specifc TODOs");
         this.props.enqueueSnackbar('Successfully Deleted TODO',{ variant: 'success', })
         // this.getTodo();
         this.props.deleteTodo(todoId)
       } else {
-        console.log("Unable to delete specific TODOs");
         this.props.enqueueSnackbar('Unable to delete specific TODOs',{ variant: 'error', })
 
       }
@@ -329,7 +305,6 @@ class TodoPage extends Component {
   };
 
   handleTodoToggleBtnGroupChange = (event, statusValue) => {
-    console.log("Changed Status to "+statusValue)
     if (statusValue !== null) {
       this.props.setCurrentTodo(this.props.curid,this.props.curtitle,this.props.curdescription,statusValue);
     }
@@ -338,8 +313,6 @@ class TodoPage extends Component {
   handleTodoCardClick = event => {
     event.preventDefault();
     const { name, value } = event.target;
-    console.dir(event)
-    console.dir(event.target);
     this.getTodoSpecific(event.target.parentElement.value);
     this.setState({
       openModal: true,
@@ -425,75 +398,47 @@ class TodoPage extends Component {
       const todoState = props.todoState;
       if (todoState.editMode === true) {
         //Create/Edit
-        if (todoState.curid === undefined) {
-          //Create
-          return (
-            <div className={classes.modalContentContainer}>
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaltitle"
-                name="curtitle"
-                label="Title"
-                variant="outlined"
-                defaultValue={todoState.curtitle}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-              />
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaldescription"
-                name="curdescription"
-                label="Description"
-                variant="outlined"
-                defaultValue={todoState.curdescription}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-                rowsMax="10"
-                multiline
-              />
-            </div>
-          );
-        } else {
-          //Edit
-          return (
-            <div className={classes.modalContentContainer}>
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaltitle"
-                name="curtitle"
-                label="Title"
-                variant="outlined"
-                defaultValue={todoState.curtitle}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-              />
-              <ToggleButtonGroup
-                value={todoState.curstatus}
-                exclusive
-                onChange={this.handleTodoToggleBtnGroupChange}
-              >
-                <ToggleButton value={false}>TODO</ToggleButton>
-                <ToggleButton value={true}>DONE</ToggleButton>
-              </ToggleButtonGroup>
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaldescription"
-                name="curdescription"
-                label="Description"
-                variant="outlined"
-                defaultValue={todoState.curdescription}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-                rowsMax="10"
-                multiline
-              />
-            </div>
-          );
+        let buttonGroup = ""
+        if(todoState.curid !== undefined){
+          buttonGroup = 
+          <ToggleButtonGroup
+          value={todoState.curstatus}
+          exclusive
+          onChange={this.handleTodoToggleBtnGroupChange}
+          >
+            <ToggleButton value={false}>TODO</ToggleButton>
+            <ToggleButton value={true}>DONE</ToggleButton>
+          </ToggleButtonGroup>
         }
+        return (
+          <div className={classes.modalContentContainer}>
+            <TextField
+              className={classes.modalContent}
+              type="text"
+              id="modaltitle"
+              name="curtitle"
+              label="Title"
+              variant="outlined"
+              defaultValue={todoState.curtitle}
+              onBlur={this.handleTodoContentChange}
+              fullWidth
+            />
+            {buttonGroup}
+            <TextField
+              className={classes.modalContent}
+              type="text"
+              id="modaldescription"
+              name="curdescription"
+              label="Description"
+              variant="outlined"
+              defaultValue={todoState.curdescription}
+              onBlur={this.handleTodoContentChange}
+              fullWidth
+              rowsMax="10"
+              multiline
+            />
+          </div>
+        );
       } else {
         //View
         let chip = undefined;

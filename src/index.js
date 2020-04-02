@@ -10,12 +10,6 @@ import thunk from 'redux-thunk'
 
 const store = createStore(todoAppReducers,applyMiddleware(thunk))
 
-//Temporary, just to check the structure of store
-console.log(store.getState())
-// Every time the state changes, log it
-// Note that subscribe() returns a function for unregistering the listener
-const unsubscribe = store.subscribe(() => console.log(store.getState()))
-
 ReactDOM.render(
   <Provider store={store}>
     <App />
