@@ -23,7 +23,7 @@ import TextField from "@material-ui/core/TextField";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
 
-import {logout, setModalEditable, setTODO, setCurrentTODO,createTODO, updateTODO,deleteTODO, setModalVisibility} from './actions.js'
+import {logout, setTODO, setCurrentTODO,createTODO, updateTODO,deleteTODO} from './actions.js'
 
 
 const useTodoCardStyles = theme => ({
@@ -111,6 +111,12 @@ const useTodoCardStyles = theme => ({
 });
 
 class TodoPage extends Component {
+  initialState = {
+    editMode: "",
+    openModal: "",
+  };
+
+  state = this.initialState;
 
   logout = () => {
     fetch("http://localhost:8000/todoapi/logout/", {
@@ -335,18 +341,24 @@ class TodoPage extends Component {
     console.dir(event)
     console.dir(event.target);
     this.getTodoSpecific(event.target.parentElement.value);
-    this.props.setModalVisibility(true);
+    this.setState({
+      openModal: true,
+    })
   };
 
   handleModalClose = () => {
     this.props.setCurrentTodo(undefined,undefined,undefined,false);
-    this.props.setModalEditable(false);
-    this.props.setModalVisibility(false);
+    this.setState({
+      openModal: false,
+      editMode: false,
+    })
   };
 
   handleModalEditCancel = () => {
     this.getTodoSpecific(this.props.curid);
-    this.props.setModalEditable(false);
+    this.setState({
+      editMode: false,
+    })
   }
 
   handleTodoCreate = () => {
@@ -585,7 +597,7 @@ class TodoPage extends Component {
               className={classes.generalButton}
               variant="contained"
               id="btnModalEdit"
-              onClick={()=> {this.props.setModalEditable(true)}}
+              onClick={()=> {this.setState({editMode:true})}}
               startIcon={<EditIcon />}
             >
               Edit
@@ -606,8 +618,10 @@ class TodoPage extends Component {
               id="btnCreateTodo"
               startIcon={<AddTwoToneIcon />}
               onClick={()=>{
-                this.props.setModalVisibility(true)
-                this.props.setModalEditable(true)
+                this.setState({
+                  openModal: true,
+                  editMode: true,
+                })
               }}
             >
               Create
@@ -624,10 +638,10 @@ class TodoPage extends Component {
           </div>
         </header>
         <TodoContent todolist={this.props.todorecords} />
-        <Modal open={this.props.openModal} onClose={this.handleModalClose}>
+        <Modal open={this.state.openModal} onClose={this.handleModalClose}>
           <div className={classes.paper}>
-            <TodoModalContentMain todoState={{curid:this.props.curid,curtitle:this.props.curtitle,curdescription:this.props.curdescription,curstatus:this.props.curstatus,editMode:this.props.editMode}} />
-            <TodoModalContentButton todoState={{curid:this.props.curid,curtitle:this.props.curtitle,curdescription:this.props.curdescription,curstatus:this.props.curstatus,editMode:this.props.editMode}} />
+            <TodoModalContentMain todoState={{curid:this.props.curid,curtitle:this.props.curtitle,curdescription:this.props.curdescription,curstatus:this.props.curstatus,editMode:this.state.editMode}} />
+            <TodoModalContentButton todoState={{curid:this.props.curid,curtitle:this.props.curtitle,curdescription:this.props.curdescription,curstatus:this.props.curstatus,editMode:this.state.editMode}} />
           </div>
         </Modal>
       </div>
@@ -641,8 +655,6 @@ const mapStateToProps = store => {
     curdescription: store.todos.curdescription,
     curstatus: store.todos.curstatus,
     todorecords: store.todos.todorecords,
-    openModal: store.modal.openModal,
-    editMode: store.modal.editMode
   }
 }
 
@@ -651,9 +663,9 @@ const mapDispatchToProps = (dispatch) => {
     userAuthHandler: () => {
       dispatch(logout())
     },
-    setModalEditable: (bool) => {
-      dispatch(setModalEditable(bool))
-    },
+    // setModalEditable: (bool) => {
+    //   dispatch(setModalEditable(bool))
+    // },
     updateEntireTodoList: (todoArray) => {
       dispatch(setTODO(todoArray))
     },
@@ -669,12 +681,6 @@ const mapDispatchToProps = (dispatch) => {
     deleteTodo:(id)=>{
       dispatch(deleteTODO(id))
     },
-    setModalEditable:(bool) => {
-      dispatch(setModalEditable(bool))
-    },
-    setModalVisibility:(bool) => {
-      dispatch(setModalVisibility(bool))
-    }
   }
 }
 

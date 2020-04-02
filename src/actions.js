@@ -54,18 +54,3 @@ export function setCurrentTODO(id,title,description,status) {
     }
 }
 
-
-export function setModalVisibility(visBool) {
-    return {
-        type: 'MODAL_VISIBILITY_UPDATE',
-        visibility: visBool,
-    }
-}
-
-export function setModalEditable(editBool) {
-    return {
-        type: 'MODAL_EDIT_UPDATE',
-        editable: editBool
-    }
-}
-

@@ -39,7 +39,6 @@
             curstatus: state.curstatus,
             todorecords:updatedRecordsForPut
         }
-        break;
 
       case 'TODO_DELETE':
         let updatedRecordsForDel = [...state.todorecords]
@@ -52,7 +51,6 @@
             curstatus: state.curstatus,
             todorecords:updatedRecordsForDel
         }
-        break;
 
       case 'TODO_REFERSH_LIST':
         return {
@@ -62,7 +60,7 @@
             curstatus: state.curstatus,
             todorecords:action.records
         }
-        break;
+
       case 'TODO_SET_CURRENT':
         return {
             curid: action.id,
@@ -71,30 +69,6 @@
             curstatus: action.status,
             todorecords: state.todorecords
         }
-        break;
-      default:
-        return state
-    }
-  }
-
-  const initialModalState = {
-    openModal: false,
-    editMode: false
-  }
-
-  function modalReducer(state = initialModalState,action){
-    switch (action.type){
-      case 'MODAL_VISIBILITY_UPDATE':
-        return Object.assign({}, state, {
-            openModal: action.visibility
-        })
-       break;
-
-      case 'MODAL_EDIT_UPDATE':
-        return Object.assign({},state,{
-            editMode: action.editable
-        })
-       break;
 
       default:
         return state
@@ -105,11 +79,9 @@
     switch (action.type) {
       case 'USER_LOGIN':
         return {isAuthenticated: true}
-        break;
 
       case 'USER_LOGOUT':
         return {isAuthenticated: false}
-        break;
 
       default:
         return state
@@ -120,7 +92,7 @@
     return {
       userAuth: authReducer(state.userAuth, action),
       todos: todoReducer(state.todos, action),
-      modal: modalReducer(state.modal, action)
+      // modal: modalReducer(state.modal, action)
     }
   }
 

@@ -4,7 +4,7 @@ import TextField from "@material-ui/core/TextField";
 import { withRouter } from "react-router-dom";
 import { withSnackbar } from 'notistack';
 import { connect } from 'react-redux'
-import { login, setModalEditable } from './actions.js'
+import { login } from './actions.js'
 
 class LoginPage extends Component {
   initialState = {
