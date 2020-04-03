@@ -7,21 +7,14 @@ import {
   Route,
   Redirect
 } from "react-router-dom";
+import { connect } from "react-redux";
 import LoginPage from "./Login.js";
 import TodoPage from "./Todo.js";
 
 class App extends Component {
-  state = {
-    isAuthenticated: false
-  };
-
-  handleAuthenticationUpdate = value => {
-    this.setState({
-      isAuthenticated: value
-    });
-  };
 
   render() {
+
     return (
       <SnackbarProvider
       maxSnack={1}
@@ -34,10 +27,10 @@ class App extends Component {
           <div className="App">
             <Switch>
             <Route exact path="/"> 
-              {this.state.isAuthenticated ? <Redirect to="/todo" /> : <LoginPage userAuthHandler={this.handleAuthenticationUpdate} userAuth={this.state.isAuthenticated}/>} 
+              {this.props.isAuthenticated ? <Redirect to="/todo" /> : <LoginPage/>} 
             </Route> 
-            <PrivateRoute exact userAuth={this.state.isAuthenticated} path="/todo">
-              <TodoPage userAuthHandler={this.handleAuthenticationUpdate}/>
+            <PrivateRoute exact userAuth={this.props.isAuthenticated} path="/todo">
+              <TodoPage/>
             </PrivateRoute>
           </Switch>
         </div>
@@ -63,4 +56,10 @@ function PrivateRoute({ children, userAuth, ...rest }) {
   );
 }
 
-export default App;
+const mapStateToProps = store => {
+  return {
+    isAuthenticated: store.userAuth.isAuthenticated
+  }
+}
+
+export default connect(mapStateToProps)(App);

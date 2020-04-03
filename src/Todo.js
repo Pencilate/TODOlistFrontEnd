@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { withSnackbar } from 'notistack';
+import { connect } from 'react-redux'
 import { withStyles } from "@material-ui/core/styles";
 
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
@@ -21,6 +22,9 @@ import Modal from "@material-ui/core/Modal";
 import TextField from "@material-ui/core/TextField";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
+
+import {logout, setTODO, createTODO, updateTODO,deleteTODO} from './actions.js'
+
 
 const useTodoCardStyles = theme => ({
   root: {
@@ -108,28 +112,15 @@ const useTodoCardStyles = theme => ({
 
 class TodoPage extends Component {
   initialState = {
-    curid: undefined,
-    curtitle: undefined,
-    curdescription: undefined,
-    curstatus: false,
-    todorecords: [
-      {
-        id: 1,
-        title: "TestInitialTodo",
-        description: "InitialTODO",
-        status: true
-      }
-    ],
+    editMode: false,
     openModal: false,
-    editMode: false
+    curid: undefined,
+    curtitle:undefined,
+    curdescription:undefined,
+    curstatus:false,
   };
 
   state = this.initialState;
-
-  handleLogout = () => {
-    this.logout();
-    window.location.replace(process.env.PUBLIC_URL);
-  };
 
   logout = () => {
     fetch("http://localhost:8000/todoapi/logout/", {
@@ -147,13 +138,12 @@ class TodoPage extends Component {
       // body:""
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("User Logged Out");
-        this.props.userAuthHandler(false);
+        this.props.userAuthHandler();
+        this.props.enqueueSnackbar('Successful Logout',{ variant: 'success', })
       }
     });
-  };
+  }
 
   getTodo = () => {
     fetch("http://localhost:8000/todoapi/todos/", {
@@ -171,17 +161,11 @@ class TodoPage extends Component {
       //   body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("Retrieved All TODOs");
         datapromise.then(body => {
-          console.dir(body.records);
-          this.setState({
-            todorecords: body.records
-          });
+          this.props.updateEntireTodoList(body.records);
         });
       } else {
-        console.log("Unable to retrieve all TODOs");
         this.props.enqueueSnackbar('Unable to retrieve all TODOs',{ variant: 'error', })
       
       }
@@ -204,22 +188,20 @@ class TodoPage extends Component {
       //   body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("Retrieved Specifc TODOs");
         datapromise.then(body => {
-          console.dir(body);
           this.setState({
-            curid: body.id,
-            curtitle: body.title,
-            curdescription: body.description,
-            curstatus: body.status
-          });
+            curid:body.id,
+            curtitle:body.title,
+            curdescription:body.description,
+            curstatus:body.status
+          })
         });
       } else {
-        console.log("Unable to retrieve specific TODOs");
         this.props.enqueueSnackbar('Unable to retrieve specific TODOs',{ variant: 'error', })
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 
@@ -227,7 +209,6 @@ class TodoPage extends Component {
     var formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    console.dir(formData);
     fetch("http://localhost:8000/todoapi/todos/", {
       method: "POST", // *GET, POST, PUT, DELETE, etc.
       mode: "cors", // no-cors, *cors, same-origin
@@ -243,21 +224,17 @@ class TodoPage extends Component {
       body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("TODO Created");
         this.props.enqueueSnackbar('Successfully Created TODO',{ variant: 'success', })
         datapromise.then(body => {
-          console.dir(body);
-          this.setState({
-            todorecords: [...this.state.todorecords,body]
-          });
+          this.props.createTodo(body.id,body.title,body.description,body.status);
         });
       }
       else{
-        console.log("Unable to create TODOs");
         this.props.enqueueSnackbar('Unable to create TODOs',{ variant: 'error', })
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 
@@ -271,7 +248,6 @@ class TodoPage extends Component {
     else{
       formData.append("status","False")
     }
-    console.dir(formData);
     fetch("http://localhost:8000/todoapi/todos/"+todoId, {
       method: "PUT", // *GET, POST, PUT, DELETE, etc.
       mode: "cors", // no-cors, *cors, same-origin
@@ -287,27 +263,19 @@ class TodoPage extends Component {
       body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("TODO Updated");
         this.props.enqueueSnackbar('Successfully Updated TODO',{ variant: 'success', })
         datapromise.then(body => {
-          console.dir(body);
-          // let updatedRecords = [...this.state.todorecords]
-          // let recordToUpdateIndex = updatedRecords.findIndex(x => x.id === body.id);
-          // updatedRecords[recordToUpdateIndex] = body
-          // this.setState({
-          //   todorecords: updatedRecords
-          // });
-          
+          let tempStatus = (body.status == "True" ? true : false)
+          this.props.updateTodo(body.id,body.title,body.description, tempStatus)
         });
-        this.getTodo();
       }
       else{
-        console.log("Unable to update specific TODOs");
         this.props.enqueueSnackbar('Unable to update specific TODOs',{ variant: 'error', })
 
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 
@@ -327,72 +295,57 @@ class TodoPage extends Component {
       //   body:formData
     }).then(response => {
       let datapromise = response.json();
-      console.dir(datapromise);
       if (response.ok) {
-        console.log("Deleted Specifc TODOs");
         this.props.enqueueSnackbar('Successfully Deleted TODO',{ variant: 'success', })
-        this.getTodo();
+        this.props.deleteTodo(todoId)
       } else {
-        console.log("Unable to delete specific TODOs");
         this.props.enqueueSnackbar('Unable to delete specific TODOs',{ variant: 'error', })
 
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 
   handleTodoContentChange = event => {
     const { name, value } = event.target;
     this.setState({
-      [name]: value
-    });
+      [name]:value
+    })
   };
 
   handleTodoToggleBtnGroupChange = (event, statusValue) => {
-    console.log("Changed Status to "+statusValue)
     if (statusValue !== null) {
       this.setState({
-        curstatus: statusValue,
-      });
+        curstatus:statusValue
+      })
     }
-    
   };
 
   handleTodoCardClick = event => {
     event.preventDefault();
-    const { name, value } = event.target;
-    console.dir(event.target);
     this.getTodoSpecific(event.target.parentElement.value);
-    this.handleOpenModal();
-  };
-
-  handleOpenModal = () => {
     this.setState({
-      openModal: true
-    });
+      openModal: true,
+    })
   };
 
   handleModalClose = () => {
     this.setState({
-      curid: undefined,
-      curtitle: undefined,
-      curdescription: undefined,
-      curstatus: false,
       openModal: false,
-      editMode:false
-    });
+      editMode: false,
+      curid: undefined,
+      curtitle:undefined,
+      curdescription:undefined,
+      curstatus:false,
+    })
   };
 
-  handleModelEdit = () => {
-    this.setState({
-      editMode: true
-    });
-  };
-
-  handleModelEditCancel = () => {
+  handleModalEditCancel = () => {
     this.getTodoSpecific(this.state.curid);
     this.setState({
-      editMode: false
-    });
+      editMode: false,
+    })
   }
 
   handleTodoCreate = () => {
@@ -459,75 +412,47 @@ class TodoPage extends Component {
       const todoState = props.todoState;
       if (todoState.editMode === true) {
         //Create/Edit
-        if (todoState.curid === undefined) {
-          //Create
-          return (
-            <div className={classes.modalContentContainer}>
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaltitle"
-                name="curtitle"
-                label="Title"
-                variant="outlined"
-                defaultValue={todoState.curtitle}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-              />
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaldescription"
-                name="curdescription"
-                label="Description"
-                variant="outlined"
-                defaultValue={todoState.curdescription}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-                rowsMax="10"
-                multiline
-              />
-            </div>
-          );
-        } else {
-          //Edit
-          return (
-            <div className={classes.modalContentContainer}>
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaltitle"
-                name="curtitle"
-                label="Title"
-                variant="outlined"
-                defaultValue={todoState.curtitle}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-              />
-              <ToggleButtonGroup
-                value={todoState.curstatus}
-                exclusive
-                onChange={this.handleTodoToggleBtnGroupChange}
-              >
-                <ToggleButton value={false}>TODO</ToggleButton>
-                <ToggleButton value={true}>DONE</ToggleButton>
-              </ToggleButtonGroup>
-              <TextField
-                className={classes.modalContent}
-                type="text"
-                id="modaldescription"
-                name="curdescription"
-                label="Description"
-                variant="outlined"
-                defaultValue={todoState.curdescription}
-                onBlur={this.handleTodoContentChange}
-                fullWidth
-                rowsMax="10"
-                multiline
-              />
-            </div>
-          );
+        let buttonGroup = ""
+        if(todoState.curid !== undefined){
+          buttonGroup = 
+          <ToggleButtonGroup
+          value={todoState.curstatus}
+          exclusive
+          onChange={this.handleTodoToggleBtnGroupChange}
+          >
+            <ToggleButton value={false}>TODO</ToggleButton>
+            <ToggleButton value={true}>DONE</ToggleButton>
+          </ToggleButtonGroup>
         }
+        return (
+          <div className={classes.modalContentContainer}>
+            <TextField
+              className={classes.modalContent}
+              type="text"
+              id="modaltitle"
+              name="curtitle"
+              label="Title"
+              variant="outlined"
+              defaultValue={todoState.curtitle}
+              onBlur={this.handleTodoContentChange}
+              fullWidth
+            />
+            {buttonGroup}
+            <TextField
+              className={classes.modalContent}
+              type="text"
+              id="modaldescription"
+              name="curdescription"
+              label="Description"
+              variant="outlined"
+              defaultValue={todoState.curdescription}
+              onBlur={this.handleTodoContentChange}
+              fullWidth
+              rowsMax="10"
+              multiline
+            />
+          </div>
+        );
       } else {
         //View
         let chip = undefined;
@@ -589,7 +514,7 @@ class TodoPage extends Component {
               className={classes.generalButton}
               variant="contained"
               id="btnModalClose"
-              onClick={this.handleModelEditCancel}
+              onClick={this.handleModalEditCancel}
               startIcon={<CloseIcon />}
             >
               Close
@@ -631,7 +556,7 @@ class TodoPage extends Component {
               className={classes.generalButton}
               variant="contained"
               id="btnModalEdit"
-              onClick={this.handleModelEdit}
+              onClick={()=> {this.setState({editMode:true})}}
               startIcon={<EditIcon />}
             >
               Edit
@@ -652,8 +577,10 @@ class TodoPage extends Component {
               id="btnCreateTodo"
               startIcon={<AddTwoToneIcon />}
               onClick={()=>{
-                this.handleOpenModal()
-                this.handleModelEdit()
+                this.setState({
+                  openModal: true,
+                  editMode: true,
+                })
               }}
             >
               Create
@@ -663,13 +590,13 @@ class TodoPage extends Component {
               variant="contained"
               id="btnLogout"
               startIcon={<ExitToAppIcon />}
-              onClick={this.handleLogout}
+              onClick={this.logout}
             >
               Logout
             </Button>
           </div>
         </header>
-        <TodoContent todolist={this.state.todorecords} />
+        <TodoContent todolist={this.props.todorecords} />
         <Modal open={this.state.openModal} onClose={this.handleModalClose}>
           <div className={classes.paper}>
             <TodoModalContentMain todoState={this.state} />
@@ -680,5 +607,30 @@ class TodoPage extends Component {
     );
   }
 }
+const mapStateToProps = store => {
+  return {
+    todorecords: store.todos.todorecords,
+  }
+}
 
-export default withStyles(useTodoCardStyles)(withSnackbar(TodoPage));
+const mapDispatchToProps = (dispatch) => {
+  return {
+    userAuthHandler: () => {
+      dispatch(logout())
+    },
+    updateEntireTodoList: (todoArray) => {
+      dispatch(setTODO(todoArray))
+    },
+    createTodo:(id,title,description,status) =>{
+      dispatch(createTODO(id,title,description,status))
+    },
+    updateTodo:(id,title,description,status) => {
+      dispatch(updateTODO(id,title,description,status))
+    },
+    deleteTodo:(id)=>{
+      dispatch(deleteTODO(id))
+    },
+  }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(withStyles(useTodoCardStyles)(withSnackbar(TodoPage)));
