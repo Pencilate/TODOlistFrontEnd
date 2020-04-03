@@ -109,8 +109,8 @@ const useTodoCardStyles = theme => ({
 class TodoPage extends Component {
   initialState = {
     curid: undefined,
-    curtitle: undefined,
-    curdescription: undefined,
+    curtitle: "",
+    curdescription: "",
     curstatus: false,
     todorecords: [
       {
@@ -121,7 +121,7 @@ class TodoPage extends Component {
       }
     ],
     openModal: false,
-    editMode: false
+    editMode: false,
   };
 
   state = this.initialState;
@@ -148,11 +148,21 @@ class TodoPage extends Component {
     }).then(response => {
       let datapromise = response.json();
       console.dir(datapromise);
-      if (response.ok) {
-        console.log("User Logged Out");
-        this.props.userAuthHandler(false);
-      }
+        switch(response.status){
+          case 200:
+            this.props.enqueueSnackbar('Successful Logout.',{ variant: 'success', })
+            this.props.userAuthHandler(false);
+            break;
+
+          case 401:
+            this.props.enqueueSnackbar('You are not logged in!',{ variant: 'error', })
+            break;
+
+        }
+    }) .catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
+
   };
 
   getTodo = () => {
@@ -172,20 +182,30 @@ class TodoPage extends Component {
     }).then(response => {
       let datapromise = response.json();
       console.dir(datapromise);
-      if (response.ok) {
-        console.log("Retrieved All TODOs");
-        datapromise.then(body => {
-          console.dir(body.records);
-          this.setState({
-            todorecords: body.records
-          });
-        });
-      } else {
-        console.log("Unable to retrieve all TODOs");
-        this.props.enqueueSnackbar('Unable to retrieve all TODOs',{ variant: 'error', })
-      
-      }
+        switch(response.status){
+          case 200:
+            console.log("Retrieved All TODOs");
+            datapromise.then(body => {
+              console.dir(body.records);
+              this.setState({
+                todorecords: body.records
+              });
+            });
+            break;
+
+          case 401:
+            datapromise.then(body=>{
+              this.props.enqueueSnackbar(body.message,{ variant: 'error', })
+            })
+            break;
+            
+          default:
+            this.props.enqueueSnackbar('Error occured when retrieveing all TODOs',{ variant: 'error', })
+        }
+    }) .catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
+
   };
 
   getTodoSpecific = todoId => {
@@ -205,28 +225,41 @@ class TodoPage extends Component {
     }).then(response => {
       let datapromise = response.json();
       console.dir(datapromise);
-      if (response.ok) {
-        console.log("Retrieved Specifc TODOs");
-        datapromise.then(body => {
-          console.dir(body);
-          this.setState({
-            curid: body.id,
-            curtitle: body.title,
-            curdescription: body.description,
-            curstatus: body.status
-          });
-        });
-      } else {
-        console.log("Unable to retrieve specific TODOs");
-        this.props.enqueueSnackbar('Unable to retrieve specific TODOs',{ variant: 'error', })
-      }
-    });
+        switch(response.status){
+          case 200:
+            console.log("Retrieved Specifc TODOs");
+            datapromise.then(body => {
+              console.dir(body);
+              this.setState({
+                curid: body.id,
+                curtitle: body.title,
+                curdescription: body.description,
+                curstatus: body.status
+              });
+            });
+            break;
+
+          case 401:
+          case 403:
+          case 404:
+            datapromise.then(body=>{
+              this.props.enqueueSnackbar(body.message,{ variant: 'error', })
+            })
+            break;
+
+          default:
+            this.props.enqueueSnackbar('Error occured when retrieveing specified TODOs',{ variant: 'error', })
+        }
+      }) .catch(() => {
+        this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
+      });
+
   };
 
   postTodo = (title,description) => {
     var formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
+    formData.append("title", title.trim());
+    formData.append("description", description.trim());
     console.dir(formData);
     fetch("http://localhost:8000/todoapi/todos/", {
       method: "POST", // *GET, POST, PUT, DELETE, etc.
@@ -244,27 +277,38 @@ class TodoPage extends Component {
     }).then(response => {
       let datapromise = response.json();
       console.dir(datapromise);
-      if (response.ok) {
-        console.log("TODO Created");
-        this.props.enqueueSnackbar('Successfully Created TODO',{ variant: 'success', })
-        datapromise.then(body => {
-          console.dir(body);
-          this.setState({
-            todorecords: [...this.state.todorecords,body]
-          });
-        });
-      }
-      else{
-        console.log("Unable to create TODOs");
-        this.props.enqueueSnackbar('Unable to create TODOs',{ variant: 'error', })
-      }
-    });
+        switch(response.status){
+          case 201:
+            console.log("TODO Created");
+            this.props.enqueueSnackbar('Successfully Created TODO',{ variant: 'success', })
+            datapromise.then(body => {
+              console.dir(body);
+              this.setState({
+                todorecords: [...this.state.todorecords,body]
+              });
+            });
+            break;
+
+          case 400:
+          case 401:
+            datapromise.then(body=>{
+              this.props.enqueueSnackbar(body.message,{ variant: 'error', })
+            })
+            break;
+
+          default:
+            this.props.enqueueSnackbar('Error occured when creating TODOs',{ variant: 'error', })
+        }
+      }) .catch(() => {
+        this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
+      });
+
   };
 
   putTodo = (todoId,title,description,status) => {
     var formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
+    formData.append("title", title.trim());
+    formData.append("description", description.trim());
     if(status){
       formData.append("status","True")
     }
@@ -288,27 +332,28 @@ class TodoPage extends Component {
     }).then(response => {
       let datapromise = response.json();
       console.dir(datapromise);
-      if (response.ok) {
-        console.log("TODO Updated");
-        this.props.enqueueSnackbar('Successfully Updated TODO',{ variant: 'success', })
-        datapromise.then(body => {
-          console.dir(body);
-          // let updatedRecords = [...this.state.todorecords]
-          // let recordToUpdateIndex = updatedRecords.findIndex(x => x.id === body.id);
-          // updatedRecords[recordToUpdateIndex] = body
-          // this.setState({
-          //   todorecords: updatedRecords
-          // });
-          
-        });
-        this.getTodo();
-      }
-      else{
-        console.log("Unable to update specific TODOs");
-        this.props.enqueueSnackbar('Unable to update specific TODOs',{ variant: 'error', })
+        switch(response.status){
+          case 200:
+            console.log("TODO Updated");
+            this.props.enqueueSnackbar('Successfully Updated TODO',{ variant: 'success', })
+            this.getTodo();
+            break;
 
-      }
-    });
+          case 400:
+          case 401:
+          case 403:
+          case 404:
+            datapromise.then(body=>{
+              this.props.enqueueSnackbar(body.message,{ variant: 'error', })
+            })
+            break;
+
+          default:
+            this.props.enqueueSnackbar('Error occured when updating TODOs',{ variant: 'error', })
+        }
+      }) .catch(() => {
+        this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
+      });
   };
 
   deleteTodoSpecific = todoId => {
@@ -328,22 +373,33 @@ class TodoPage extends Component {
     }).then(response => {
       let datapromise = response.json();
       console.dir(datapromise);
-      if (response.ok) {
-        console.log("Deleted Specifc TODOs");
-        this.props.enqueueSnackbar('Successfully Deleted TODO',{ variant: 'success', })
-        this.getTodo();
-      } else {
-        console.log("Unable to delete specific TODOs");
-        this.props.enqueueSnackbar('Unable to delete specific TODOs',{ variant: 'error', })
+        switch(response.status){
+          case 200:
+            console.log("Deleted Specifc TODOs");
+            this.props.enqueueSnackbar('Successfully Deleted TODO',{ variant: 'success', })
+            this.getTodo();
+            break;
 
-      }
+          case 401:
+          case 403:
+            datapromise.then(body=>{
+              this.props.enqueueSnackbar(body.message,{ variant: 'error', })
+            })
+            break;
+
+          default:
+            this.props.enqueueSnackbar('Error occured when deleting TODOs',{ variant: 'error', })
+        }
+    }) .catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
+
   };
 
   handleTodoContentChange = event => {
     const { name, value } = event.target;
     this.setState({
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -367,15 +423,15 @@ class TodoPage extends Component {
 
   handleOpenModal = () => {
     this.setState({
-      openModal: true
+      openModal: true,
     });
   };
 
   handleModalClose = () => {
     this.setState({
       curid: undefined,
-      curtitle: undefined,
-      curdescription: undefined,
+      curtitle: "",
+      curdescription: "",
       curstatus: false,
       openModal: false,
       editMode:false
@@ -384,7 +440,7 @@ class TodoPage extends Component {
 
   handleModelEdit = () => {
     this.setState({
-      editMode: true
+      editMode: true,
     });
   };
 
@@ -571,6 +627,7 @@ class TodoPage extends Component {
               Close
             </Button>
             <Button
+              disabled={this.state.curtitle.trim() === "" || this.state.curtitle === undefined || this.state.curdescription.trim() === "" || this.state.curdescription === undefined}
               className={classes.generalButton}
               variant="contained"
               id="btnModalCreate"
@@ -595,6 +652,7 @@ class TodoPage extends Component {
               Close
             </Button>
             <Button
+              disabled={this.state.curtitle.trim() === "" || this.state.curtitle === undefined || this.state.curdescription.trim() === "" || this.state.curdescription === undefined}
               className={classes.generalButton}
               variant="contained"
               id="btnModalUpdate"
