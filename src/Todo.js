@@ -200,6 +200,8 @@ class TodoPage extends Component {
       } else {
         this.props.enqueueSnackbar('Unable to retrieve specific TODOs',{ variant: 'error', })
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 
@@ -231,6 +233,8 @@ class TodoPage extends Component {
       else{
         this.props.enqueueSnackbar('Unable to create TODOs',{ variant: 'error', })
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 
@@ -270,6 +274,8 @@ class TodoPage extends Component {
         this.props.enqueueSnackbar('Unable to update specific TODOs',{ variant: 'error', })
 
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 
@@ -296,6 +302,8 @@ class TodoPage extends Component {
         this.props.enqueueSnackbar('Unable to delete specific TODOs',{ variant: 'error', })
 
       }
+    }).catch(() => {
+      this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
     });
   };
 

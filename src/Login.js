@@ -42,7 +42,9 @@ class LoginPage extends Component {
           })
           this.props.enqueueSnackbar('You have entered Invalid Credentials',{ variant: 'error', })
         }
-      })  
+      }) .catch(() => {
+        this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
+      });
     }
 
     handleSubmit = event => {
