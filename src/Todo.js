@@ -23,7 +23,7 @@ import TextField from "@material-ui/core/TextField";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
 
-import {logout, setTODO, setCurrentTODO,createTODO, updateTODO,deleteTODO} from './actions.js'
+import {logout, setTODO, createTODO, updateTODO,deleteTODO} from './actions.js'
 
 
 const useTodoCardStyles = theme => ({
@@ -112,8 +112,12 @@ const useTodoCardStyles = theme => ({
 
 class TodoPage extends Component {
   initialState = {
-    editMode: "",
-    openModal: "",
+    editMode: false,
+    openModal: false,
+    curid: undefined,
+    curtitle:undefined,
+    curdescription:undefined,
+    curstatus:false,
   };
 
   state = this.initialState;
@@ -186,7 +190,12 @@ class TodoPage extends Component {
       let datapromise = response.json();
       if (response.ok) {
         datapromise.then(body => {
-          this.props.setCurrentTodo(body.id,body.title,body.description,body.status)
+          this.setState({
+            curid:body.id,
+            curtitle:body.title,
+            curdescription:body.description,
+            curstatus:body.status
+          })
         });
       } else {
         this.props.enqueueSnackbar('Unable to retrieve specific TODOs',{ variant: 'error', })
@@ -217,7 +226,6 @@ class TodoPage extends Component {
         this.props.enqueueSnackbar('Successfully Created TODO',{ variant: 'success', })
         datapromise.then(body => {
           this.props.createTodo(body.id,body.title,body.description,body.status);
-
         });
       }
       else{
@@ -283,7 +291,6 @@ class TodoPage extends Component {
       let datapromise = response.json();
       if (response.ok) {
         this.props.enqueueSnackbar('Successfully Deleted TODO',{ variant: 'success', })
-        // this.getTodo();
         this.props.deleteTodo(todoId)
       } else {
         this.props.enqueueSnackbar('Unable to delete specific TODOs',{ variant: 'error', })
@@ -294,25 +301,21 @@ class TodoPage extends Component {
 
   handleTodoContentChange = event => {
     const { name, value } = event.target;
-    switch(name){
-      case 'curtitle':
-        this.props.setCurrentTodo(this.props.curid,value,this.props.curdescription,this.props.curstatus);
-        break;
-      case 'curdescription':
-        this.props.setCurrentTodo(this.props.curid,this.props.curtitle,value,this.props.curstatus);
-        break;
-    }
+    this.setState({
+      [name]:value
+    })
   };
 
   handleTodoToggleBtnGroupChange = (event, statusValue) => {
     if (statusValue !== null) {
-      this.props.setCurrentTodo(this.props.curid,this.props.curtitle,this.props.curdescription,statusValue);
+      this.setState({
+        curstatus:statusValue
+      })
     }
   };
 
   handleTodoCardClick = event => {
     event.preventDefault();
-    const { name, value } = event.target;
     this.getTodoSpecific(event.target.parentElement.value);
     this.setState({
       openModal: true,
@@ -320,32 +323,35 @@ class TodoPage extends Component {
   };
 
   handleModalClose = () => {
-    this.props.setCurrentTodo(undefined,undefined,undefined,false);
     this.setState({
       openModal: false,
       editMode: false,
+      curid: undefined,
+      curtitle:undefined,
+      curdescription:undefined,
+      curstatus:false,
     })
   };
 
   handleModalEditCancel = () => {
-    this.getTodoSpecific(this.props.curid);
+    this.getTodoSpecific(this.state.curid);
     this.setState({
       editMode: false,
     })
   }
 
   handleTodoCreate = () => {
-    this.postTodo(this.props.curtitle,this.props.curdescription);
+    this.postTodo(this.state.curtitle,this.state.curdescription);
     this.handleModalClose();
   }
   
   handleTodoUpdate = () => {
-    this.putTodo(this.props.curid,this.props.curtitle,this.props.curdescription,this.props.curstatus)
+    this.putTodo(this.state.curid,this.state.curtitle,this.state.curdescription,this.state.curstatus)
     this.handleModalClose();
   }
 
   handleTodoDelete = () => {
-    this.deleteTodoSpecific(this.props.curid);
+    this.deleteTodoSpecific(this.state.curid);
     this.handleModalClose();
   };
 
@@ -585,8 +591,8 @@ class TodoPage extends Component {
         <TodoContent todolist={this.props.todorecords} />
         <Modal open={this.state.openModal} onClose={this.handleModalClose}>
           <div className={classes.paper}>
-            <TodoModalContentMain todoState={{curid:this.props.curid,curtitle:this.props.curtitle,curdescription:this.props.curdescription,curstatus:this.props.curstatus,editMode:this.state.editMode}} />
-            <TodoModalContentButton todoState={{curid:this.props.curid,curtitle:this.props.curtitle,curdescription:this.props.curdescription,curstatus:this.props.curstatus,editMode:this.state.editMode}} />
+            <TodoModalContentMain todoState={this.state} />
+            <TodoModalContentButton todoState={this.state} />
           </div>
         </Modal>
       </div>
@@ -595,10 +601,6 @@ class TodoPage extends Component {
 }
 const mapStateToProps = store => {
   return {
-    curid: store.todos.curid,
-    curtitle: store.todos.curtitle,
-    curdescription: store.todos.curdescription,
-    curstatus: store.todos.curstatus,
     todorecords: store.todos.todorecords,
   }
 }
@@ -608,14 +610,8 @@ const mapDispatchToProps = (dispatch) => {
     userAuthHandler: () => {
       dispatch(logout())
     },
-    // setModalEditable: (bool) => {
-    //   dispatch(setModalEditable(bool))
-    // },
     updateEntireTodoList: (todoArray) => {
       dispatch(setTODO(todoArray))
-    },
-    setCurrentTodo:(id,title,description,status) =>{
-      dispatch(setCurrentTODO(id,title,description,status))
     },
     createTodo:(id,title,description,status) =>{
       dispatch(createTODO(id,title,description,status))

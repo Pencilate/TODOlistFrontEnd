@@ -44,13 +44,4 @@ export function setTODO(todoArray) {
     }
 }
 
-export function setCurrentTODO(id,title,description,status) {
-    return {
-        type: 'TODO_SET_CURRENT',
-        id:id,
-        title: title,
-        description: description,
-        status:status
-    }
-}
 
