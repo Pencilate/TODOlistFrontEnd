@@ -34,16 +34,33 @@ class LoginPage extends Component {
       }).then((response) => {
         let datapromise = response.json()
         console.dir(datapromise)
-        if(response.ok){
-          console.log("User Authenticated")
-          this.props.userAuthHandler(true);
-        }else{
-          this.setState({
-            authStatus:'You have entered Invalid Credentials',
-          })
-          this.props.enqueueSnackbar('You have entered Invalid Credentials',{ variant: 'error', })
+        switch(response.status){
+          case 200:
+            console.log("User Authenticated")
+            this.props.userAuthHandler(true);
+            break;
+
+          case 401:
+            this.setState({
+              authStatus:'You have entered Invalid Credentials',
+            })
+            this.props.enqueueSnackbar('You have entered Invalid Credentials',{ variant: 'error', })
+            break;
+
+          case 400:
+          case 405:
+            datapromise.then(body=>{
+              this.props.enqueueSnackbar(body.message,{ variant: 'error', })
+            })
+            break;
+
+          default:
+            this.props.enqueueSnackbar('Error occured when deleting TODOs',{ variant: 'error', })
         }
-      })  
+      }) .catch(() => {
+        this.props.enqueueSnackbar('Unable to connect to server',{ variant: 'error', })
+      });
+
     }
 
     handleSubmit = event => {
